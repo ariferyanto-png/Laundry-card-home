@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laundry 3D Manager - Laporan Keuangan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-3d {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow:  12px 12px 24px #d1d5db, -12px -12px 24px #ffffff;
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-3d {
+            border-radius: 12px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            top: 0;
+        }
+
+        .btn-3d-primary {
+            background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            box-shadow: 0 6px 0 #0284c7, 0 10px 15px rgba(0,0,0,0.2);
+        }
+        .btn-3d-primary:active {
+            top: 6px;
+            box-shadow: 0 0 0 #0284c7, 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-3d-success {
+            background: linear-gradient(145deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 6px 0 #059669, 0 10px 15px rgba(0,0,0,0.2);
+        }
+        .btn-3d-success:active { top: 6px; box-shadow: 0 0 0 #059669; }
+
+        .btn-3d-danger {
+            background: linear-gradient(145deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            box-shadow: 0 6px 0 #b91c1c, 0 10px 15px rgba(0,0,0,0.2);
+        }
+        .btn-3d-danger:active { top: 6px; box-shadow: 0 0 0 #b91c1c; }
+
+        .btn-3d-warning {
+            background: linear-gradient(145deg, #f59e0b 0%, #fbbf24 100%);
+            color: white;
+            box-shadow: 0 6px 0 #b45309, 0 10px 15px rgba(0,0,0,0.2);
+        }
+        .btn-3d-warning:active { top: 6px; box-shadow: 0 0 0 #b45309; }
+
+        .btn-3d-outline {
+            background: #ffffff;
+            color: #334155;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 0 #cbd5e1, 0 8px 10px rgba(0,0,0,0.05);
+        }
+        .btn-3d-outline:active { top: 4px; box-shadow: 0 0 0 #cbd5e1; }
+
+        .input-3d {
+            background: #f8fafc;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            box-shadow: inset 3px 3px 6px #cbd5e1, inset -3px -3px 6px #ffffff;
+            padding: 0.75rem 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-3d:focus {
+            border-color: #4facfe;
+            box-shadow: inset 1px 1px 3px #cbd5e1, inset -1px -1px 3px #ffffff, 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+
+        .icon-3d {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.1), -4px -4px 10px #ffffff;
+        }
+        
+        .icon-blue { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
+        .icon-green { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
+        .icon-red { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
+        .icon-yellow { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+        .icon-purple { background: linear-gradient(135deg, #a78bfa, #8b5cf6); color: white; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area {
+                position: absolute; left: 0; top: 0; width: 58mm;
+                padding: 0; margin: 0; font-family: 'Courier New', Courier, monospace;
+                font-size: 12px; color: black !important; line-height: 1.2;
+            }
+            @page { size: 58mm auto; margin: 0mm; }
+            .no-print { display: none !important; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .hide { display: none !important; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'laundry-app-v1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, currentUserId = 'demo_user';
+        let isOnline = false;
+
+        if (firebaseConfig.apiKey) {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                isOnline = true;
+            } catch (e) {
+                console.error("Gagal inisialisasi Firebase", e);
+            }
+        }
+
+        window.AppState = {
+            settings: { 
+                outletName: 'Laundry Ku 3D', 
+                address: 'Jl. Estetik No. 123', 
+                phone: '08123456789',
+                receiptFooter: 'Terima Kasih!\nBarang yang tidak diambil >1 bulan bukan tanggung jawab kami.',
+                showLogo: true,
+                showAddress: true,
+                showPhone: true,
+                showCustomerName: true,
+                showCashierName: true,
+                showParfum: true
+            },
+            services: [],
+            customers: [],
+            employees: [],
+            transactions: [],
+            listeners: []
+        };
+
+        async function initApp() {
+            showLoading(true);
+            if (isOnline) {
+                try {
+                    if (initialToken) {
+                        await signInWithCustomToken(auth, initialToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            currentUserId = user.uid;
+                            setupRealtimeListeners();
+                        }
+                    });
+                } catch (error) {
+                    console.error("Auth error:", error);
+                    showToast("Gagal terhubung ke Cloud. Berjalan di mode offline.", "warning");
+                    loadDummyData();
+                    renderDashboard();
+                }
+            } else {
+                loadDummyData();
+                renderDashboard();
+            }
+            showLoading(false);
+            initRouter();
+        }
+
+        const getColPath = (colName) => collection(db, 'artifacts', appId, 'users', currentUserId, colName);
+        const getDocPath = (colName, docId) => doc(db, 'artifacts', appId, 'users', currentUserId, colName, docId);
+
+        function setupRealtimeListeners() {
+            AppState.listeners.forEach(unsub => unsub());
+            AppState.listeners = [];
+
+            if (!db) return;
+
+            const unsubSettings = onSnapshot(getDocPath('settings', 'main'), (docSnap) => {
+                if (docSnap.exists()) {
+                    AppState.settings = { ...AppState.settings, ...docSnap.data() };
+                } else {
+                    setDoc(getDocPath('settings', 'main'), AppState.settings).catch(e => console.error(e));
+                }
+                updateUIStoreInfo();
+            }, err => console.error("Snapshot error settings:", err));
+            AppState.listeners.push(unsubSettings);
+
+            const unsubServices = onSnapshot(getColPath('services'), (snapshot) => {
+                AppState.services = [];
+                snapshot.forEach(doc => AppState.services.push({ id: doc.id, ...doc.data() }));
+                if(currentView === 'services') renderServices();
+            }, err => console.error("Error services:", err));
+            AppState.listeners.push(unsubServices);
+
+            const unsubCustomers = onSnapshot(getColPath('customers'), (snapshot) => {
+                AppState.customers = [];
+                snapshot.forEach(doc => AppState.customers.push({ id: doc.id, ...doc.data() }));
+                if(currentView === 'customers') renderCustomers();
+            }, err => console.error("Error customers:", err));
+            AppState.listeners.push(unsubCustomers);
+            
+            const unsubEmployees = onSnapshot(getColPath('employees'), (snapshot) => {
+                AppState.employees = [];
+                snapshot.forEach(doc => AppState.employees.push({ id: doc.id, ...doc.data() }));
+                if(currentView === 'employees') renderEmployees();
+            }, err => console.error("Error employees:", err));
+            AppState.listeners.push(unsubEmployees);
+
+            const unsubTransactions = onSnapshot(getColPath('transactions'), (snapshot) => {
+                AppState.transactions = [];
+                snapshot.forEach(doc => AppState.transactions.push({ id: doc.id, ...doc.data() }));
+                AppState.transactions.sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                if(currentView === 'dashboard') renderDashboard();
+                if(currentView === 'transactions') renderTransactions();
+                if(currentView === 'reports') renderReports();
+            }, err => console.error("Error transactions:", err));
+            AppState.listeners.push(unsubTransactions);
+        }
+
+        window.DB = {
+            saveSetting: async (data) => {
+                AppState.settings = { ...AppState.settings, ...data };
+                if (isOnline) await setDoc(getDocPath('settings', 'main'), AppState.settings);
+                updateUIStoreInfo();
+                showToast("Pengaturan disimpan");
+            },
+            addService: async (data) => {
+                if (isOnline) await addDoc(getColPath('services'), data);
+                else AppState.services.push({id: Date.now().toString(), ...data});
+                showToast("Layanan ditambahkan");
+            },
+            updateService: async (id, data) => {
+                if (isOnline) await updateDoc(getColPath('services', id), data);
+                else {
+                    const idx = AppState.services.findIndex(s => s.id === id);
+                    if(idx > -1) AppState.services[idx] = {...AppState.services[idx], ...data};
+                }
+                showToast("Layanan diupdate");
+            },
+            deleteService: async (id) => {
+                if (isOnline) await deleteDoc(getColPath('services', id));
+                else AppState.services = AppState.services.filter(s => s.id !== id);
+                showToast("Layanan dihapus");
+            },
+            addCustomer: async (data) => {
+                if (isOnline) await addDoc(getColPath('customers'), data);
+                else AppState.customers.push({id: Date.now().toString(), ...data});
+                showToast("Pelanggan ditambahkan");
+            },
+            addEmployee: async (data) => {
+                if (isOnline) await addDoc(getColPath('employees'), data);
+                else AppState.employees.push({id: Date.now().toString(), ...data});
+                showToast("Karyawan ditambahkan");
+            },
+            saveTransaction: async (data) => {
+                if (isOnline) {
+                    data.createdAt = serverTimestamp();
+                    const ref = await addDoc(getColPath('transactions'), data);
+                    showToast("Transaksi berhasil dibuat");
+                    return ref.id;
+                } else {
+                    data.id = Date.now().toString();
+                    AppState.transactions.unshift(data);
+                    showToast("Transaksi berhasil dibuat (Offline)");
+                    return data.id;
+                }
+            },
+            updateTransactionStatus: async (id, newStatus, paymentUpdate = null) => {
+                const updateData = { status: newStatus };
+                if (paymentUpdate) Object.assign(updateData, paymentUpdate);
+
+                if (isOnline) {
+                    await updateDoc(getDocPath('transactions', id), updateData);
+                } else {
+                    const tr = AppState.transactions.find(t => t.id === id);
+                    if(tr) {
+                        tr.status = newStatus;
+                        if(paymentUpdate) Object.assign(tr, paymentUpdate);
+                    }
+                }
+                showToast(`Status transaksi diubah: ${newStatus}`);
+                if(currentView === 'transactions') renderTransactions();
+                if(currentView === 'reports') renderReports();
+            }
+        };
+
+        function loadDummyData() {
+            if(AppState.services.length === 0) {
+                AppState.services = [
+                    { id: '1', name: 'Cuci Komplit', category: 'Kiloan', price: 6000, unit: 'Kg', estimasi: 2 },
+                    { id: '2', name: 'Cuci Kering', category: 'Kiloan', price: 4000, unit: 'Kg', estimasi: 1 },
+                    { id: '3', name: 'Setrika Saja', category: 'Kiloan', price: 3000, unit: 'Kg', estimasi: 1 },
+                    { id: '4', name: 'Bed Cover Besar', category: 'Satuan', price: 25000, unit: 'Pcs', estimasi: 3 }
+                ];
+            }
+            if(AppState.customers.length === 0) {
+                AppState.customers = [
+                    { id: 'c1', name: 'Budi Santoso', phone: '08122334455', address: 'Jl. Merdeka 1' },
+                    { id: 'c2', name: 'Siti Rahma', phone: '085711223344', address: 'Jl. Mawar No. 12' }
+                ];
+            }
+            if(AppState.employees.length === 0) {
+                AppState.employees = [
+                    { id: 'e1', name: 'Admin Utama', role: 'Kasir', phone: '0812345678' }
+                ];
+            }
+            if(AppState.transactions.length === 0) {
+                const today = new Date().toISOString();
+                AppState.transactions = [
+                    { id: 't1', date: today, customerId: 'c1', items: [{serviceId: '1', qty: 5, price: 6000, total: 30000}], grandTotal: 30000, amountPaid: 30000, paymentStatus: 'lunas', paymentMethod: 'Tunai', status: 'proses', cashier: 'Admin Utama' },
+                    { id: 't2', date: today, customerId: 'c2', items: [{serviceId: '4', qty: 2, price: 25000, total: 50000}], grandTotal: 50000, amountPaid: 20000, paymentStatus: 'dp', paymentMethod: 'Transfer', status: 'antrian', cashier: 'Admin Utama' }
+                ];
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+
+    <!-- Navigation Bottom Bar (Modified for Mobile UX) -->
+    <aside class="fixed bottom-0 left-0 right-0 h-16 md:w-64 md:h-screen md:relative bg-white border-t md:border-t-0 md:border-r border-slate-200 flex md:flex-col justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:shadow-xl z-20 overflow-x-auto scrollbar-hide">
+        <div class="hidden md:flex h-20 items-center justify-center border-b border-slate-100 p-4 shrink-0">
+            <div class="icon-3d icon-blue shrink-0 shadow-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m-9 9a9 9 0 019-9"></path></svg>
+            </div>
+            <div class="ml-3 font-bold text-xl text-slate-800 leading-tight">
+                <span id="ui-store-name">Laundry App</span>
+                <div class="text-xs text-slate-400 font-normal">3D Edition</div>
+            </div>
+        </div>
+        
+        <nav class="flex md:flex-col flex-row items-center md:items-stretch justify-around md:justify-start w-full md:w-auto p-1.5 md:p-4 md:space-y-2 h-full md:h-auto gap-1">
+            <a href="#dashboard" onclick="navigate('dashboard')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 active-nav">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">📊</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Home</span>
+            </a>
+            <a href="#new-trx" onclick="navigate('new-trx')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">➕</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold text-blue-600">Kasir</span>
+            </a>
+            <a href="#transactions" onclick="navigate('transactions')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">🧺</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Order</span>
+            </a>
+            <a href="#services" onclick="navigate('services')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">🏷️</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Layanan</span>
+            </a>
+            <a href="#customers" onclick="navigate('customers')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">👥</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Pelanggan</span>
+            </a>
+            <a href="#employees" onclick="navigate('employees')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 hidden md:flex">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">👷‍♂️</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Staf</span>
+            </a>
+            <a href="#reports" onclick="navigate('reports')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">📈</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold text-emerald-700">Laporan</span>
+            </a>
+            <a href="#settings" onclick="navigate('settings')" class="nav-item flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl hover:bg-slate-50 transition-colors text-slate-600">
+                <div class="w-8 h-8 md:w-8 md:h-8 rounded-lg bg-slate-100 flex items-center justify-center mr-0 md:mr-3 shadow-inner text-sm md:text-base">⚙️</div>
+                <span class="text-[10px] md:text-sm font-bold md:font-semibold">Setting</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 text-center hidden md:block shrink-0">
+            Laundry 3D v2.4
+        </div>
+    </aside>
+
+    <main class="flex-1 relative overflow-y-auto overflow-x-hidden bg-[#f0f4f8] pb-20 md:pb-8">
+        <div id="view-container" class="p-4 md:p-8 w-full max-w-7xl mx-auto min-h-full">
+            <!-- Dynamic view container -->
+        </div>
+    </main>
+
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="loading-overlay" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hide transition-opacity">
+        <div class="card-3d p-6 flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <p class="font-bold text-slate-700 animate-pulse">Memuat Data...</p>
+        </div>
+    </div>
+
+    <!-- Area Tersembunyi Khusus Untuk Cetak/Print Nota Thermal -->
+    <div id="print-area" class="no-print bg-white"></div>
+
+    <script>
+        let currentView = 'dashboard';
+
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+        const formatDate = (dateStr) => {
+            if(!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgColors = 'bg-emerald-500 text-white';
+            let icon = '✅';
+            if (type === 'error') { bgColors = 'bg-red-500 text-white'; icon = '❌'; }
+            else if (type === 'warning') { bgColors = 'bg-yellow-500 text-white'; icon = '⚠️'; }
+            
+            toast.className = `px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-x-full ${bgColors} font-bold text-sm flex items-center gap-2`;
+            toast.innerHTML = `<span>${icon}</span> ${message}`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full');
+            });
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function showLoading(show) {
+            const el = document.getElementById('loading-overlay');
+            if(show) el.classList.remove('hide');
+            else setTimeout(() => el.classList.add('hide'), 300);
+        }
+
+        function updateUIStoreInfo() {
+            document.getElementById('ui-store-name').innerText = window.AppState.settings.outletName || 'Laundry App';
+        }
+
+        function initRouter() {
+            const hash = window.location.hash.replace('#', '') || 'dashboard';
+            navigate(hash);
+        }
+
+        function navigate(view) {
+            currentView = view;
+            window.location.hash = view;
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-500', 'bg-emerald-50', 'text-emerald-600', 'border-emerald-500', 'md:border-r-4');
+                if(el.getAttribute('href') === `#${view}`) {
+                    if(view === 'reports') {
+                        el.classList.add('bg-emerald-50', 'text-emerald-600', 'md:border-r-4', 'border-emerald-500');
+                    } else {
+                        el.classList.add('bg-blue-50', 'text-blue-600', 'md:border-r-4', 'border-blue-500');
+                    }
+                }
+            });
+
+            const container = document.getElementById('view-container');
+            container.style.opacity = 0;
+            
+            setTimeout(() => {
+                switch(view) {
+                    case 'dashboard': renderDashboard(); break;
+                    case 'new-trx': renderNewTransaction(); break;
+                    case 'transactions': renderTransactions(); break;
+                    case 'services': renderServices(); break;
+                    case 'customers': renderCustomers(); break;
+                    case 'employees': renderEmployees(); break;
+                    case 'reports': renderReports(); break;
+                    case 'settings': renderSettings(); break;
+                    default: renderDashboard();
+                }
+                container.style.transition = 'opacity 0.3s ease';
+                container.style.opacity = 1;
+            }, 150);
+        }
+
+        function Modal(id, title, contentHTML, actionsHTML = '') {
+            return `
+            <div id="${id}" class="fixed inset-0 z-50 flex items-center justify-center p-4 hide">
+                <div class="fixed inset-0 modal-overlay" onclick="closeModal('${id}')"></div>
+                <div class="card-3d w-full max-w-lg relative z-10 flex flex-col max-h-[90vh]">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-[20px]">
+                        <h3 class="text-xl font-extrabold text-slate-800">${title}</h3>
+                        <button onclick="closeModal('${id}')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors">✕</button>
+                    </div>
+                    <div class="p-5 overflow-y-auto">
+                        ${contentHTML}
+                    </div>
+                    ${actionsHTML ? `<div class="p-5 border-t border-slate-100 bg-slate-50/50 rounded-b-[20px] flex justify-end gap-3 flex-wrap">${actionsHTML}</div>` : ''}
+                </div>
+            </div>
+            `;
+        }
+
+        window.openModal = function(id) { document.getElementById(id).classList.remove('hide'); }
+        window.closeModal = function(id) { document.getElementById(id).classList.add('hide'); }
+
+        // State untuk Filter Rentang Tanggal Dashboard
+        window.dashboardFilterStartDate = window.dashboardFilterStartDate || new Date().toISOString().split('T')[0];
+        window.dashboardFilterEndDate = window.dashboardFilterEndDate || new Date().toISOString().split('T')[0];
+
+        // ------------- COMPONENT: DASHBOARD -------------
+        function renderDashboard() {
+            const container = document.getElementById('view-container');
+            const trx = window.AppState.transactions;
+            
+            let omsetHariIni = 0; 
+            let piutangHariIni = 0; 
+            let transaksiHariIni = 0;
+            
+            let countMasuk = 0;
+            let countLunas = 0;
+            let countBatal = 0;
+            let countProses = 0;
+            let countTerlambat = 0; 
+
+            const selectedStartDateStr = window.dashboardFilterStartDate || new Date().toISOString().split('T')[0];
+            const selectedEndDateStr = window.dashboardFilterEndDate || new Date().toISOString().split('T')[0];
+            
+            const startD = new Date(selectedStartDateStr); startD.setHours(0,0,0,0);
+            const endD = new Date(selectedEndDateStr); endD.setHours(23,59,59,999);
+            const now = new Date();
+
+            trx.forEach(t => {
+                const trxDateObj = new Date(t.date);
+                const isWithinRange = trxDateObj >= startD && trxDateObj <= endD;
+
+                if (t.status !== 'batal') {
+                    countMasuk++;
+                    
+                    if (isWithinRange) {
+                        transaksiHariIni++;
+                        omsetHariIni += Number(t.amountPaid || 0);
+                        
+                        if (t.paymentStatus === 'dp') {
+                            piutangHariIni += (Number(t.grandTotal) - Number(t.amountPaid));
+                        } else if (t.paymentStatus === 'belum') {
+                            piutangHariIni += Number(t.grandTotal);
+                        }
+                    }
+
+                    if (t.paymentStatus === 'lunas') {
+                        countLunas++;
+                    } 
+                    
+                    if (['antrian', 'proses'].includes(t.status)) countProses++;
+
+                    if (['antrian', 'proses', 'siap'].includes(t.status)) {
+                        let maxEst = 1; 
+                        t.items.forEach(i => {
+                            const s = window.AppState.services.find(ser => ser.id === i.serviceId);
+                            if (s && s.estimasi > maxEst) maxEst = s.estimasi;
+                        });
+                        
+                        const expectedDate = new Date(trxDateObj.getTime() + (maxEst * 24 * 60 * 60 * 1000));
+                        if (now > expectedDate) {
+                            countTerlambat++;
+                        }
+                    }
+                } else {
+                    countBatal++;
+                }
+            });
+
+            const widget = (title, value, icon, colorClass, subtitle, onClickAttr = '', isCompact = false) => `
+                <div ${onClickAttr} class="card-3d ${isCompact ? 'p-4' : 'p-6'} flex items-center relative overflow-hidden group ${onClickAttr ? 'cursor-pointer hover:shadow-lg transition-all' : ''}">
+                    <div class="absolute -right-6 -top-6 ${isCompact ? 'w-16 h-16' : 'w-24 h-24'} rounded-full opacity-10 bg-current ${colorClass} group-hover:scale-150 transition-transform duration-500"></div>
+                    <div class="icon-3d ${isCompact ? 'w-10 h-10 text-xl' : ''} ${colorClass} mr-3 relative z-10 shrink-0">${icon}</div>
+                    <div class="relative z-10 flex-1 min-w-0">
+                        <p class="${isCompact ? 'text-[11px] md:text-xs' : 'text-sm'} font-bold text-slate-500 mb-0.5 truncate">${title}</p>
+                        <h3 class="${isCompact ? 'text-lg md:text-xl' : 'text-2xl'} font-extrabold text-slate-800">${value}</h3>
+                        ${subtitle ? `<p class="text-[10px] text-slate-400 mt-0.5 leading-tight truncate">${subtitle}</p>` : ''}
+                    </div>
+                    ${onClickAttr ? `<div class="text-slate-300 group-hover:text-blue-500 ${isCompact ? 'text-sm' : 'text-lg'} transition-colors font-bold pl-1 shrink-0">➔</div>` : ''}
+                </div>
+            `;
+
+            const miniWidget = (title, value, icon, colorClass, onClickAttr = '') => `
+                <div ${onClickAttr} class="card-3d p-4 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-extrabold text-slate-700 leading-tight">${title}</span>
+                        <div class="icon-3d w-8 h-8 text-base ${colorClass} shrink-0 shadow-sm">${icon}</div>
+                    </div>
+                    <div class="flex items-end justify-between mt-1">
+                        <span class="text-xl font-extrabold text-slate-800">${value}</span>
+                        <span class="text-xs font-bold text-slate-400 group-hover:text-blue-500 transition-colors">Lihat ➔</span>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Ringkasan Bisnis</h1>
+                        <p class="text-slate-500 mt-1 font-semibold">Pantau performa laundry Anda.</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex-wrap w-full md:w-auto">
+                        <span class="text-xs font-bold text-slate-500 pl-1">📅 Periode:</span>
+                        <input type="date" id="dash-filter-start" value="${selectedStartDateStr}" class="input-3d py-1 px-2 text-xs font-bold w-full sm:w-auto flex-1" onchange="window.dashboardFilterStartDate = this.value; renderDashboard();">
+                        <span class="text-xs font-bold text-slate-400 text-center w-full sm:w-auto">s/d</span>
+                        <input type="date" id="dash-filter-end" value="${selectedEndDateStr}" class="input-3d py-1 px-2 text-xs font-bold w-full sm:w-auto flex-1" onchange="window.dashboardFilterEndDate = this.value; renderDashboard();">
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">💰 Keuangan (Periode Terpilih)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    ${widget('Total Transaksi', transaksiHariIni, '📋', 'icon-blue', 'Klik untuk lihat rincian nota', 'onclick="openTodayDetailModal(\'all\')"')}
+                    ${widget('Total Omset', formatRupiah(omsetHariIni), '💸', 'icon-green', 'Klik untuk lihat rincian uang masuk', 'onclick="openTodayDetailModal(\'omset\')"')}
+                    ${widget('Total Piutang', formatRupiah(piutangHariIni), '🧾', 'icon-yellow', 'Klik untuk lihat rincian piutang', 'onclick="openTodayDetailModal(\'piutang\')"')}
+                </div>
+
+                <h2 class="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">📊 Transaksi Keseluruhan</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    ${miniWidget('Sedang Proses', countProses, '⏳', 'icon-yellow', 'onclick="openOverallDetailModal(\'proses\')"')}
+                    ${miniWidget('Transaksi Batal', countBatal, '❌', 'icon-red', 'onclick="openOverallDetailModal(\'batal\')"')}
+                    ${miniWidget('Terlambat', countTerlambat, '⏰', 'icon-red', 'onclick="openOverallDetailModal(\'terlambat\')"')}
+                </div>
+
+                <div id="modal-dashboard-container"></div>
+            `;
+        }
+
+        window.openTodayDetailModal = function(type = 'all') {
+            const trx = window.AppState.transactions;
+            const customers = window.AppState.customers;
+            const services = window.AppState.services;
+            
+            const selectedStartDateStr = window.dashboardFilterStartDate || new Date().toISOString().split('T')[0];
+            const selectedEndDateStr = window.dashboardFilterEndDate || new Date().toISOString().split('T')[0];
+            const startD = new Date(selectedStartDateStr); startD.setHours(0,0,0,0);
+            const endD = new Date(selectedEndDateStr); endD.setHours(23,59,59,999);
+
+            let todayTrx = trx.filter(t => {
+                const trxDateObj = new Date(t.date);
+                return trxDateObj >= startD && trxDateObj <= endD && t.status !== 'batal';
+            });
+
+            let dateRangeText = selectedStartDateStr === selectedEndDateStr ? selectedStartDateStr : `${selectedStartDateStr} s/d ${selectedEndDateStr}`;
+
+            let modalTitle = `📋 Transaksi (${dateRangeText})`;
+            let summaryText = '';
+            let totalVal = 0;
+
+            if (type === 'omset') {
+                todayTrx = todayTrx.filter(t => Number(t.amountPaid) > 0);
+                modalTitle = `💸 Rincian Omset (${dateRangeText})`;
+                totalVal = todayTrx.reduce((sum, t) => sum + Number(t.amountPaid), 0);
+                summaryText = `Total Uang Masuk: <strong class="text-emerald-600">${formatRupiah(totalVal)}</strong>`;
+            } else if (type === 'piutang') {
+                todayTrx = todayTrx.filter(t => (Number(t.grandTotal) - Number(t.amountPaid)) > 0);
+                modalTitle = `🧾 Rincian Piutang (${dateRangeText})`;
+                totalVal = todayTrx.reduce((sum, t) => sum + (Number(t.grandTotal) - Number(t.amountPaid)), 0);
+                summaryText = `Total Belum Lunas: <strong class="text-red-500">${formatRupiah(totalVal)}</strong>`;
+            } else {
+                summaryText = `Total Nota: <strong class="text-slate-800">${todayTrx.length} Nota</strong>`;
+            }
+
+            const statusColors = {
+                'antrian': 'bg-slate-100 text-slate-600 border-slate-300',
+                'proses': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                'siap': 'bg-blue-100 text-blue-700 border-blue-300',
+                'selesai': 'bg-emerald-100 text-emerald-700 border-emerald-300'
+            };
+
+            const payColors = { 'lunas': 'text-emerald-600', 'dp': 'text-yellow-600', 'belum': 'text-red-500' };
+
+            let listHTML = '';
+            if (todayTrx.length === 0) {
+                listHTML = `<div class="p-8 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Belum ada data untuk periode ini.</div>`;
+            } else {
+                todayTrx.forEach(t => {
+                    const cust = customers.find(c => c.id === t.customerId);
+                    const custName = cust ? cust.name : 'Unknown';
+
+                    let serviceSummary = '';
+                    t.items.forEach(i => {
+                        const s = services.find(ser => ser.id === i.serviceId);
+                        if(s) serviceSummary += `${s.name} (${i.qty}), `;
+                    });
+                    serviceSummary = serviceSummary.replace(/,\s*$/, '');
+                    if(serviceSummary.length > 35) serviceSummary = serviceSummary.substring(0, 35) + '...';
+
+                    const sisaTagihan = Number(t.grandTotal) - Number(t.amountPaid);
+
+                    listHTML += `
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-base">${custName}</h4>
+                                    <p class="text-xs text-slate-500">${serviceSummary || 'Layanan'} • ${formatDate(t.date)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-extrabold ${type === 'piutang' ? 'text-red-500' : 'text-blue-600'} text-base">
+                                        ${type === 'piutang' ? `Kurang: ${formatRupiah(sisaTagihan)}` : (type === 'omset' ? `Masuk: ${formatRupiah(t.amountPaid)}` : formatRupiah(t.grandTotal))}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 text-xs font-bold gap-2 flex-wrap">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-full border ${statusColors[t.status] || ''} uppercase text-[11px]">${t.status}</span>
+                                    <span class="font-bold ${payColors[t.paymentStatus]} uppercase text-[11px]">${t.paymentStatus}</span>
+                                </div>
+                                <button onclick="closeModal('modal-dashboard-detail'); viewTransactionDetail('${t.id}')" class="btn-3d btn-3d-outline px-3 py-1 text-xs">Detail & Aksi</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            const modalContent = `
+                <div class="mb-3 text-xs font-bold text-slate-500 flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <span>${summaryText}</span>
+                    <span class="text-right">Periode:<br><strong class="text-slate-800">${dateRangeText}</strong></span>
+                </div>
+                <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 pb-2">
+                    ${listHTML}
+                </div>
+            `;
+
+            let container = document.getElementById('modal-dashboard-container');
+            if(!container) {
+                container = document.createElement('div');
+                container.id = 'modal-dashboard-container';
+                document.getElementById('view-container').appendChild(container);
+            }
+            container.innerHTML = Modal('modal-dashboard-detail', modalTitle, modalContent);
+            openModal('modal-dashboard-detail');
+        };
+
+        window.openOverallDetailModal = function(type) {
+            const trx = window.AppState.transactions;
+            const customers = window.AppState.customers;
+            const services = window.AppState.services;
+            const now = new Date();
+
+            let filteredTrx = [];
+            let modalTitle = '';
+
+            if (type === 'aktif') {
+                filteredTrx = trx.filter(t => t.status !== 'batal');
+                modalTitle = '🧺 Transaksi Aktif';
+            } else if (type === 'proses') {
+                filteredTrx = trx.filter(t => ['antrian', 'proses'].includes(t.status) && t.status !== 'batal');
+                modalTitle = '⏳ Proses';
+            } else if (type === 'lunas') {
+                filteredTrx = trx.filter(t => t.paymentStatus === 'lunas' && t.status !== 'batal');
+                modalTitle = '✅ Lunas';
+            } else if (type === 'batal') {
+                filteredTrx = trx.filter(t => t.status === 'batal');
+                modalTitle = '❌ Batal';
+            } else if (type === 'terlambat') {
+                filteredTrx = trx.filter(t => {
+                    if (['antrian', 'proses', 'siap'].includes(t.status) && t.status !== 'batal') {
+                        let maxEst = 1;
+                        t.items.forEach(i => {
+                            const s = window.AppState.services.find(ser => ser.id === i.serviceId);
+                            if (s && s.estimasi > maxEst) maxEst = s.estimasi;
+                        });
+                        const expectedDate = new Date(new Date(t.date).getTime() + (maxEst * 24 * 60 * 60 * 1000));
+                        return now > expectedDate;
+                    }
+                    return false;
+                });
+                modalTitle = '⏰ Terlambat';
+            }
+
+            let summaryText = `Total Nota: <strong class="text-slate-800">${filteredTrx.length} Nota</strong>`;
+
+            const statusColors = {
+                'antrian': 'bg-slate-100 text-slate-600 border-slate-300',
+                'proses': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                'siap': 'bg-blue-100 text-blue-700 border-blue-300',
+                'selesai': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+                'batal': 'bg-red-100 text-red-700 border-red-300'
+            };
+
+            const payColors = { 'lunas': 'text-emerald-600', 'dp': 'text-yellow-600', 'belum': 'text-red-500' };
+
+            let listHTML = '';
+            if (filteredTrx.length === 0) {
+                listHTML = `<div class="p-8 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Belum ada data untuk kategori ini.</div>`;
+            } else {
+                filteredTrx.forEach(t => {
+                    const cust = customers.find(c => c.id === t.customerId);
+                    const custName = cust ? cust.name : 'Unknown';
+
+                    let serviceSummary = '';
+                    t.items.forEach(i => {
+                        const s = services.find(ser => ser.id === i.serviceId);
+                        if(s) serviceSummary += `${s.name} (${i.qty}), `;
+                    });
+                    serviceSummary = serviceSummary.replace(/,\s*$/, '');
+                    if(serviceSummary.length > 35) serviceSummary = serviceSummary.substring(0, 35) + '...';
+
+                    listHTML += `
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-base">${custName}</h4>
+                                    <p class="text-xs text-slate-500">${serviceSummary || 'Layanan'} • ${formatDate(t.date)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-extrabold text-blue-600 text-base">
+                                        ${formatRupiah(t.grandTotal)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 text-xs font-bold gap-2 flex-wrap">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-full border ${statusColors[t.status] || ''} uppercase text-[11px]">${t.status}</span>
+                                    <span class="font-bold ${payColors[t.paymentStatus]} uppercase text-[11px]">${t.paymentStatus}</span>
+                                </div>
+                                <button onclick="closeModal('modal-dashboard-detail'); viewTransactionDetail('${t.id}')" class="btn-3d btn-3d-outline px-3 py-1 text-xs">Detail & Aksi</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            const modalContent = `
+                <div class="mb-3 text-xs font-bold text-slate-500 flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <span>${summaryText}</span>
+                </div>
+                <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 pb-2">
+                    ${listHTML}
+                </div>
+            `;
+
+            let container = document.getElementById('modal-dashboard-container');
+            if(!container) {
+                container = document.createElement('div');
+                container.id = 'modal-dashboard-container';
+                document.getElementById('view-container').appendChild(container);
+            }
+            container.innerHTML = Modal('modal-dashboard-detail', modalTitle, modalContent);
+            openModal('modal-dashboard-detail');
+        };
+
+        // ------------- COMPONENT: REPORTS -------------
+        function renderReports() {
+            const container = document.getElementById('view-container');
+            const trx = window.AppState.transactions;
+
+            let totalKeuanganDiterima = 0;
+            let countMasuk = 0;
+            let countLunas = 0;
+            let countSelesai = 0;
+            let countBatal = 0;
+
+            trx.forEach(t => {
+                if(t.status !== 'batal') {
+                    totalKeuanganDiterima += Number(t.amountPaid || 0);
+                    countMasuk++;
+                    if(t.paymentStatus === 'lunas') countLunas++;
+                    if(t.status === 'selesai') countSelesai++;
+                } else {
+                    countBatal++;
+                }
+            });
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">📑 Laporan Keuangan</h1>
+                        <p class="text-slate-500 mt-1 font-semibold">Rincian filter laporan transaksi keuangan Anda.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                    </span>
+                </div>
+
+                <div class="card-3d bg-gradient-to-r from-emerald-500 to-teal-400 p-6 text-white mb-8 shadow-xl text-center relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 pointer-events-none"></div>
+                    <p class="text-sm font-bold opacity-90 mb-1">Total Keuangan Diterima</p>
+                    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-1">${formatRupiah(totalKeuanganDiterima)}</h2>
+                    <p class="text-xs opacity-80">Dari total omset seluruh order aktif</p>
+                </div>
+
+                <div class="space-y-4 max-w-2xl mx-auto">
+                    <div onclick="openReportFilterModal('masuk')" class="card-3d p-4 md:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-blue-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl shadow-inner">🧺</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-base md:text-lg">Transaksi Masuk</h3>
+                                <p class="text-xs text-blue-600 font-bold">Klik untuk lihat rincian & filter</p>
+                            </div>
+                        </div>
+                        <span class="text-2xl font-extrabold text-slate-800 bg-slate-100 px-4 py-1.5 rounded-xl shadow-inner">${countMasuk}</span>
+                    </div>
+
+                    <div onclick="openReportFilterModal('lunas')" class="card-3d p-4 md:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-emerald-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shadow-inner">✅</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-base md:text-lg">Transaksi Lunas</h3>
+                                <p class="text-xs text-emerald-600 font-bold">Klik untuk lihat rincian</p>
+                            </div>
+                        </div>
+                        <span class="text-2xl font-extrabold text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-xl shadow-inner">${countLunas}</span>
+                    </div>
+
+                    <div onclick="openReportFilterModal('selesai')" class="card-3d p-4 md:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-indigo-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl shadow-inner">🏁</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-base md:text-lg">Laporan Transaksi Selesai</h3>
+                                <p class="text-xs text-indigo-600 font-bold">Klik untuk lihat rincian</p>
+                            </div>
+                        </div>
+                        <span class="text-2xl font-extrabold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-xl shadow-inner">${countSelesai}</span>
+                    </div>
+
+                    <div onclick="openReportFilterModal('batal')" class="card-3d p-4 md:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-red-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl shadow-inner">❌</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-base md:text-lg">Transaksi Batal</h3>
+                                <p class="text-xs text-red-500 font-bold">Klik untuk lihat rincian</p>
+                            </div>
+                        </div>
+                        <span class="text-2xl font-extrabold text-red-500 bg-red-50 px-4 py-1.5 rounded-xl shadow-inner">${countBatal}</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 space-y-3 max-w-2xl mx-auto border-t border-slate-200 pt-6">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">⚙️ Manajemen Data & Pencadangan</h3>
+                    
+                    <div onclick="exportExcel()" class="card-3d p-3 md:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-green-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center text-xl shadow-inner">📊</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-sm md:text-base">Export ke Excel</h3>
+                                <p class="text-xs text-green-600 font-bold">Unduh semua data transaksi (.csv)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onclick="backupData()" class="card-3d p-3 md:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-blue-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shadow-inner">💾</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-sm md:text-base">Backup Data (Cadangkan)</h3>
+                                <p class="text-xs text-blue-600 font-bold">Simpan semua memori aplikasi ke HP</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onclick="document.getElementById('restore-file').click()" class="card-3d p-3 md:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-l-4 border-l-orange-500">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl shadow-inner">🔄</div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-sm md:text-base">Restore Data (Pulihkan)</h3>
+                                <p class="text-xs text-orange-600 font-bold">Pulihkan data dari file backup (.json)</p>
+                            </div>
+                        </div>
+                        <input type="file" id="restore-file" class="hidden" accept=".json" onchange="restoreData(event)">
+                    </div>
+                </div>
+
+                <div id="modal-report-container"></div>
+            `;
+        }
+
+        window.exportExcel = function() {
+            const trx = window.AppState.transactions;
+            const customers = window.AppState.customers;
+            const services = window.AppState.services;
+
+            if (trx.length === 0) return showToast("Tidak ada data untuk diexport", "warning");
+
+            let csvContent = "ID Transaksi,Tanggal,Pelanggan,Layanan,Total Tagihan,Status Pembayaran,Jumlah Dibayar,Metode Pembayaran,Status Pengerjaan,Kasir\n";
+
+            trx.forEach(t => {
+                const cust = customers.find(c => c.id === t.customerId);
+                const custName = cust ? cust.name.replace(/,/g, '') : 'Unknown';
+                
+                let serviceSummary = '';
+                t.items.forEach(i => {
+                    const s = services.find(ser => ser.id === i.serviceId);
+                    if(s) serviceSummary += `${s.name} (${i.qty}) `;
+                });
+                serviceSummary = serviceSummary.replace(/,/g, ';').trim();
+
+                const date = new Date(t.date).toLocaleString('id-ID').replace(/,/g, '');
+
+                csvContent += `"${t.id}","${date}","${custName}","${serviceSummary}","${t.grandTotal}","${t.paymentStatus}","${t.amountPaid}","${t.paymentMethod || '-'}","${t.status}","${t.cashier || '-'}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Laporan_Laundry_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Berhasil mengunduh laporan (CSV)");
+        }
+
+        window.backupData = function() {
+            const dataToBackup = {
+                settings: window.AppState.settings,
+                services: window.AppState.services,
+                customers: window.AppState.customers,
+                employees: window.AppState.employees,
+                transactions: window.AppState.transactions
+            };
+            const jsonString = JSON.stringify(dataToBackup, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Backup_Laundry_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Berhasil membuat file backup");
+        }
+
+        window.restoreData = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.settings || !data.transactions) throw new Error("Format file tidak valid");
+
+                    if (confirm("PERHATIAN: Memulihkan (Restore) akan menimpa/mengganti memori aplikasi di perangkat ini. Lanjutkan?")) {
+                        showLoading(true);
+                        
+                        window.AppState.settings = data.settings || window.AppState.settings;
+                        window.AppState.services = data.services || [];
+                        window.AppState.customers = data.customers || [];
+                        window.AppState.employees = data.employees || [];
+                        window.AppState.transactions = data.transactions || [];
+
+                        if (isOnline) {
+                            await window.DB.saveSetting(window.AppState.settings);
+                            showToast("Data dipulihkan ke memori lokal.", "warning");
+                        } else {
+                            showToast("Restore berhasil (Mode Offline)");
+                        }
+                        
+                        renderReports(); 
+                        showLoading(false);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Gagal membaca file backup", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        window.openReportFilterModal = function(defaultCategory = 'masuk') {
+            window.reportFilterState = {
+                category: defaultCategory,
+                startDate: '',
+                endDate: '',
+                payStatus: defaultCategory === 'lunas' ? 'lunas' : 'semua',
+                payMethod: 'semua'
+            };
+
+            const modalContent = `
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-lg mb-4 text-center">
+                    <p class="text-xs uppercase font-bold text-blue-200 tracking-wider">Total Hasil Filter Laporan</p>
+                    <h3 id="report-total-amount" class="text-2xl md:text-3xl font-extrabold mt-0.5">Rp 0</h3>
+                    <p id="report-total-count" class="text-[11px] text-blue-100 font-semibold mt-0.5">0 Transaksi Ditemukan</p>
+                </div>
+
+                <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">📅 Dari Tanggal</label>
+                            <input type="date" id="filter-start-date" class="input-3d w-full py-1.5 text-xs font-bold" onchange="applyReportFilter()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">📅 Sampai Tanggal</label>
+                            <input type="date" id="filter-end-date" class="input-3d w-full py-1.5 text-xs font-bold" onchange="applyReportFilter()">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Status Pembayaran</label>
+                            <select id="filter-pay-status" class="input-3d w-full py-1.5 text-xs font-bold text-slate-700" onchange="applyReportFilter()">
+                                <option value="semua">Semua Status</option>
+                                <option value="lunas" ${defaultCategory === 'lunas' ? 'selected' : ''}>Lunas</option>
+                                <option value="dp">DP (Sebagian)</option>
+                                <option value="belum">Belum Lunas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Metode Bayar</label>
+                            <select id="filter-pay-method" class="input-3d w-full py-1.5 text-xs font-bold text-slate-700" onchange="applyReportFilter()">
+                                <option value="semua">Semua Metode</option>
+                                <option value="Tunai">Tunai</option>
+                                <option value="Transfer">Transfer</option>
+                                <option value="ShopeePay">ShopeePay</option>
+                                <option value="DANA">DANA</option>
+                                <option value="GoPay">GoPay</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-items-list" class="space-y-3 max-h-[40vh] overflow-y-auto pr-1"></div>
+            `;
+
+            let container = document.getElementById('modal-report-container');
+            if(!container) {
+                container = document.createElement('div');
+                container.id = 'modal-report-container';
+                document.getElementById('view-container').appendChild(container);
+            }
+            container.innerHTML = Modal('modal-report-filter', 'Rincian Laporan Transaksi', modalContent);
+            openModal('modal-report-filter');
+            applyReportFilter();
+        };
+
+        window.applyReportFilter = function() {
+            const startVal = document.getElementById('filter-start-date')?.value;
+            const endVal = document.getElementById('filter-end-date')?.value;
+            const payStatusVal = document.getElementById('filter-pay-status')?.value;
+            const payMethodVal = document.getElementById('filter-pay-method')?.value;
+
+            const category = window.reportFilterState.category;
+            const allTrx = window.AppState.transactions;
+            const customers = window.AppState.customers;
+            const services = window.AppState.services;
+
+            let filtered = allTrx.filter(t => {
+                if (category === 'masuk' && t.status === 'batal') return false;
+                if (category === 'lunas' && !['lunas', 'dp'].includes(t.paymentStatus)) return false; 
+                if (category === 'selesai' && t.status !== 'selesai') return false;
+                if (category === 'batal' && t.status !== 'batal') return false;
+
+                if (startVal) {
+                    const dStart = new Date(startVal);
+                    dStart.setHours(0,0,0,0);
+                    if (new Date(t.date) < dStart) return false;
+                }
+                if (endVal) {
+                    const dEnd = new Date(endVal);
+                    dEnd.setHours(23,59,59,999);
+                    if (new Date(t.date) > dEnd) return false;
+                }
+
+                if (payStatusVal !== 'semua') {
+                    if (payStatusVal === 'lunas' && !['lunas', 'dp'].includes(t.paymentStatus)) return false;
+                    if (payStatusVal === 'belum' && !['belum', 'dp'].includes(t.paymentStatus)) return false;
+                    if (payStatusVal === 'dp' && t.paymentStatus !== 'dp') return false;
+                }
+
+                if (payMethodVal !== 'semua' && (t.paymentMethod || 'Tunai') !== payMethodVal) return false;
+
+                return true;
+            });
+
+            let totalSum = 0;
+            let html = '';
+
+            if (filtered.length === 0) {
+                const listContainer = document.getElementById('report-items-list');
+                if (listContainer) {
+                    listContainer.innerHTML = `<div class="p-6 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Tidak ada transaksi yang cocok.</div>`;
+                }
+                document.getElementById('report-total-amount').innerText = formatRupiah(0);
+                document.getElementById('report-total-count').innerText = `0 Transaksi Terfilter`;
+                return;
+            }
+
+            filtered.forEach(t => {
+                let itemAmount = Number(t.grandTotal || 0);
+                let sisaBelumBayar = Number(t.grandTotal || 0) - Number(t.amountPaid || 0);
+
+                if (payStatusVal === 'lunas') itemAmount = Number(t.amountPaid || 0);
+                else if (payStatusVal === 'belum') itemAmount = sisaBelumBayar;
+                else if (payStatusVal === 'dp') itemAmount = Number(t.amountPaid || 0);
+
+                totalSum += itemAmount;
+
+                const cust = customers.find(c => c.id === t.customerId);
+                const custName = cust ? cust.name : 'Unknown';
+
+                let serviceSummary = '';
+                t.items.forEach(i => {
+                    const s = services.find(ser => ser.id === i.serviceId);
+                    if(s) serviceSummary += `${s.name} (${i.qty}), `;
+                });
+                serviceSummary = serviceSummary.replace(/,\s*$/, '');
+                if(serviceSummary.length > 30) serviceSummary = serviceSummary.substring(0, 30) + '...';
+
+                const payBadgeColor = t.paymentStatus === 'lunas' ? 'text-emerald-600 bg-emerald-50' : (t.paymentStatus === 'dp' ? 'text-yellow-600 bg-yellow-50' : 'text-red-500 bg-red-50');
+
+                html += `
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${custName}</h4>
+                                <p class="text-xs text-slate-500">${serviceSummary || 'Layanan'} • ${formatDate(t.date)}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-extrabold text-blue-600 text-sm">${formatRupiah(itemAmount)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs font-bold pt-2 border-t border-slate-100">
+                            <span class="px-2 py-0.5 rounded-lg ${payBadgeColor} uppercase text-[11px]">
+                                ${t.status} • Bayar: ${formatRupiah(t.amountPaid)} (${t.paymentStatus} / ${t.paymentMethod || 'Tunai'})
+                            </span>
+                            <button onclick="closeModal('modal-report-filter'); viewTransactionDetail('${t.id}')" class="text-blue-600 hover:underline">Detail ➔</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const amountEl = document.getElementById('report-total-amount');
+            const countEl = document.getElementById('report-total-count');
+            if(amountEl) amountEl.innerText = formatRupiah(totalSum);
+            if(countEl) countEl.innerText = `${filtered.length} Transaksi Terfilter`;
+
+            const listContainer = document.getElementById('report-items-list');
+            if(listContainer) listContainer.innerHTML = html;
+        };
+
+        // ------------- COMPONENT: TRANSACTIONS LIST & DETAILS -------------
+        window.trxSearchQuery = '';
+        window.trxActiveFilter = 'semua';
+
+        window.quickUpdateStatus = async function(id, currentStatus) {
+            const nextStatusMap = {
+                'antrian': 'proses',
+                'proses': 'siap',
+                'siap': 'selesai'
+            };
+            const nextStatus = nextStatusMap[currentStatus];
+            
+            if (nextStatus) {
+                await window.DB.updateTransactionStatus(id, nextStatus);
+            } else {
+                showToast("Transaksi sudah pada status akhir.", "warning");
+            }
+        };
+
+        window.filterTransactions = function(query) {
+            window.trxSearchQuery = query;
+            renderTransactions();
+            
+            const input = document.getElementById('trx-search');
+            if(input) { 
+                input.focus(); 
+                input.setSelectionRange(input.value.length, input.value.length); 
+            }
+        };
+
+        window.setTrxFilter = function(status) {
+            window.trxActiveFilter = status;
+            renderTransactions();
+            
+            setTimeout(() => {
+                const container = document.getElementById('trx-filter-container');
+                if (container) {
+                    const activeBtn = container.querySelector('.bg-blue-500');
+                    if (activeBtn) {
+                        const scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
+                        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                    }
+                }
+            }, 50);
+        };
+
+        function renderTransactions() {
+            const container = document.getElementById('view-container');
+            const trx = window.AppState.transactions;
+            const customers = window.AppState.customers;
+
+            const getCustomerName = (id) => {
+                const c = customers.find(x => x.id === id);
+                return c ? c.name : 'Unknown';
+            };
+
+            let filteredTrx = trx.filter(t => {
+                if (window.trxActiveFilter !== 'semua' && t.status !== window.trxActiveFilter) {
+                    return false;
+                }
+                
+                if (window.trxSearchQuery) {
+                    const custName = getCustomerName(t.customerId).toLowerCase();
+                    if (!custName.includes(window.trxSearchQuery.toLowerCase())) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            const statusColors = {
+                'antrian': 'bg-slate-100 text-slate-600 border-slate-300',
+                'proses': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                'siap': 'bg-blue-100 text-blue-700 border-blue-300',
+                'selesai': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+                'batal': 'bg-red-100 text-red-700 border-red-300'
+            };
+
+            const payColors = { 'lunas': 'text-emerald-500', 'dp': 'text-yellow-500', 'belum': 'text-red-500' };
+
+            let tableRows = '';
+            let mobileCards = '';
+
+            if (filteredTrx.length === 0) {
+                tableRows = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-semibold">Tidak ada transaksi yang cocok</td></tr>`;
+                mobileCards = `<div class="p-8 text-center text-slate-400 font-semibold card-3d">Tidak ada transaksi yang cocok</div>`;
+            } else {
+                filteredTrx.forEach(t => {
+                    const custName = getCustomerName(t.customerId);
+                    const isDp = t.paymentStatus === 'dp';
+                    const sisaDp = isDp ? formatRupiah(t.grandTotal - t.amountPaid) : '';
+
+                    tableRows += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td class="p-4 font-bold text-slate-800">${custName}</td>
+                            <td class="p-4"><button onclick="event.stopPropagation(); window.quickUpdateStatus('${t.id}', '${t.status}')" class="px-3 py-1 rounded-full text-xs font-bold border ${statusColors[t.status] || ''} uppercase shadow-sm cursor-pointer hover:opacity-80 transition">${t.status === 'siap' ? 'Siap Ambil' : t.status}</button></td>
+                            <td class="p-4 font-bold ${payColors[t.paymentStatus]} uppercase text-sm">${t.paymentStatus} ${isDp ? `<br><span class="text-xs text-slate-400 font-normal">Kurang: ${sisaDp}</span>` : ''}</td>
+                            <td class="p-4 text-right">
+                                <div class="font-extrabold text-slate-800">${formatRupiah(t.grandTotal)}</div>
+                                <div class="text-[10px] text-slate-400 mt-1">${formatDate(t.date)}</div>
+                            </td>
+                            <td class="p-4 text-center"><button onclick="viewTransactionDetail('${t.id}')" class="btn-3d btn-3d-outline px-3 py-1 text-xs">Detail & Aksi</button></td>
+                        </tr>
+                    `;
+
+                    mobileCards += `
+                        <div class="card-3d p-4 transition-colors hover:bg-slate-50 cursor-pointer" onclick="viewTransactionDetail('${t.id}')">
+                            <div class="flex justify-between items-start gap-2 mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-base leading-snug">${custName}</h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">${formatDate(t.date)}</p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="font-extrabold text-blue-600 text-base">${formatRupiah(t.grandTotal)}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-2 gap-2 flex-wrap">
+                                <div class="flex items-center gap-2 flex-wrap text-xs">
+                                    <button onclick="event.stopPropagation(); window.quickUpdateStatus('${t.id}', '${t.status}')" class="px-2.5 py-1 rounded-full font-bold border ${statusColors[t.status] || ''} uppercase shadow-sm text-[11px] cursor-pointer hover:opacity-80 transition">${t.status === 'siap' ? 'Siap Ambil' : t.status}</button>
+                                    <span class="font-bold ${payColors[t.paymentStatus]} uppercase text-[11px]">${t.paymentStatus} ${isDp ? `<span class="text-slate-400 font-normal">(-${sisaDp})</span>` : ''}</span>
+                                </div>
+                                <button onclick="event.stopPropagation(); viewTransactionDetail('${t.id}')" class="btn-3d btn-3d-outline px-3 py-1 text-xs font-bold shrink-0 ml-auto">Detail</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            const filterTabs = [
+                { id: 'semua', label: 'Semua' },
+                { id: 'antrian', label: 'Antrian' },
+                { id: 'proses', label: 'Proses' },
+                { id: 'siap', label: 'Siap Ambil' },
+                { id: 'selesai', label: 'Selesai' },
+                { id: 'batal', label: 'Batal' }
+            ];
+
+            let tabsHTML = filterTabs.map(tab => {
+                const isActive = window.trxActiveFilter === tab.id;
+                const activeClass = isActive ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50';
+                return `<button onclick="window.setTrxFilter('${tab.id}')"
+                                class="px-4 py-1.5 rounded-full border text-sm font-bold whitespace-nowrap transition-colors ${activeClass}">
+                            ${tab.label}
+                        </button>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Semua Transaksi</h1>
+                    <button onclick="navigate('new-trx')" class="btn-3d btn-3d-primary px-4 md:px-6 py-2 text-sm md:text-base">➕ Transaksi Baru</button>
+                </div>
+                
+                <div class="bg-white p-3.5 md:p-4 rounded-[20px] border border-slate-200 shadow-sm mb-5">
+                    <div class="relative w-full mb-3">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-lg">🔍</span>
+                        <input type="text" id="trx-search" value="${window.trxSearchQuery}"
+                               placeholder="Cari nama pelanggan di sini..."
+                               class="input-3d w-full pl-10 py-2.5 text-sm font-bold text-slate-700"
+                               oninput="window.filterTransactions(this.value)">
+                    </div>
+                    <div id="trx-filter-container" class="flex overflow-x-auto gap-2 pb-1 scrollbar-hide">
+                        ${tabsHTML}
+                    </div>
+                </div>
+                
+                <div class="card-3d overflow-hidden hidden md:block">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/50 text-slate-500 text-sm uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-4 font-extrabold">Pelanggan</th>
+                                    <th class="p-4 font-extrabold">Status Kerja</th>
+                                    <th class="p-4 font-extrabold">Pembayaran</th>
+                                    <th class="p-4 font-extrabold text-right">Total</th>
+                                    <th class="p-4 font-extrabold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-3 md:hidden">
+                    ${mobileCards}
+                </div>
+
+                <div id="modal-detail-container"></div>
+            `;
+        }
+
+        window.viewTransactionDetail = function(id) {
+            const trx = window.AppState.transactions.find(t => t.id === id);
+            const customer = window.AppState.customers.find(c => c.id === trx.customerId);
+            if(!trx) return;
+
+            let itemsHTML = '';
+            trx.items.forEach(i => {
+                const s = window.AppState.services.find(ser => ser.id === i.serviceId);
+                itemsHTML += `
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100 border-dashed">
+                        <div>
+                            <p class="font-bold text-slate-700">${s ? s.name : 'Item Dihapus'}</p>
+                            <p class="text-xs text-slate-500">${i.qty} x ${formatRupiah(i.price)}</p>
+                        </div>
+                        <p class="font-bold text-slate-800">${formatRupiah(i.total)}</p>
+                    </div>
+                `;
+            });
+
+            let workflowActions = '';
+            const nextStatusMap = {
+                'antrian': { next: 'proses', label: 'Mulai Proses', color: 'btn-3d-primary' },
+                'proses': { next: 'siap', label: 'Tandai Siap Ambil', color: 'btn-3d-success' },
+                'siap': { next: 'selesai', label: 'Tandai Selesai (Diambil)', color: 'btn-3d-outline' }
+            };
+
+            if (nextStatusMap[trx.status]) {
+                const ns = nextStatusMap[trx.status];
+                workflowActions += `<button onclick="updateWorkflow('${id}', '${ns.next}')" class="btn-3d ${ns.color} px-4 py-2 flex-1 text-sm font-bold">${ns.label}</button>`;
+            }
+            if (trx.status !== 'batal' && trx.status !== 'selesai') {
+                workflowActions += `<button onclick="updateWorkflow('${id}', 'batal')" class="btn-3d btn-3d-danger px-4 py-2 flex-1 text-sm font-bold">Batal Transaksi</button>`;
+            }
+
+            let paymentActions = '';
+            if (trx.paymentStatus !== 'lunas') {
+                paymentActions = `
+                    <div class="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                        <p class="font-bold text-yellow-800 mb-2">Aksi Pembayaran (Sisa: ${formatRupiah(trx.grandTotal - trx.amountPaid)})</p>
+                        <button onclick="payFull('${id}')" class="btn-3d btn-3d-success px-4 py-2 w-full font-bold">Bayar Lunas Sekarang</button>
+                    </div>
+                `;
+            }
+
+            const modalHTML = Modal('modal-trx-detail', `Detail Transaksi #${id.substring(0,6).toUpperCase()}`, `
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                    <div>
+                        <p class="text-slate-400">Pelanggan</p>
+                        <p class="font-bold text-slate-800">${customer ? customer.name : '-'}</p>
+                        <p class="text-xs text-slate-500">${customer ? customer.phone : ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-slate-400">Tanggal & Waktu</p>
+                        <p class="font-bold text-slate-800">${formatDate(trx.date)}</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-100">
+                    <h4 class="font-extrabold text-slate-700 border-b border-slate-200 pb-2 mb-2 text-sm uppercase">Daftar Layanan</h4>
+                    ${itemsHTML}
+                    <div class="flex justify-between items-center pt-2 mt-2 font-extrabold text-lg border-t border-slate-200">
+                        <span>Total Tagihan</span>
+                        <span class="text-blue-600">${formatRupiah(trx.grandTotal)}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm mt-1">
+                        <span class="text-slate-500">Telah Dibayar (${trx.paymentStatus.toUpperCase()})</span>
+                        <span class="text-green-600">${formatRupiah(trx.amountPaid)}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-slate-500 text-sm mb-2 font-bold">Ubah Status Pengerjaan:</p>
+                    <div class="flex gap-2">
+                        ${workflowActions}
+                    </div>
+                </div>
+                ${paymentActions}
+            `, `
+                <button onclick="previewReceipt('${id}')" class="btn-3d btn-3d-primary px-4 py-2 flex items-center justify-center gap-2 font-bold">🖨️ Cetak / Print Nota</button>
+                <button onclick="shareReceipt('${id}')" class="btn-3d btn-3d-outline px-4 py-2 flex items-center justify-center gap-2 font-bold text-blue-600">📤 Bagikan Nota</button>
+            `);
+
+            document.getElementById('modal-detail-container').innerHTML = modalHTML;
+            openModal('modal-trx-detail');
+        };
+
+        window.updateWorkflow = async function(id, newStatus) {
+            if(confirm(`Yakin mengubah status menjadi ${newStatus.toUpperCase()}?`)) {
+                await window.DB.updateTransactionStatus(id, newStatus);
+                closeModal('modal-trx-detail');
+            }
+        }
+
+        window.payFull = async function(id) {
+            const trx = window.AppState.transactions.find(t => t.id === id);
+            if(confirm(`Konfirmasi pembayaran lunas sisa ${formatRupiah(trx.grandTotal - trx.amountPaid)}?`)) {
+                await window.DB.updateTransactionStatus(id, trx.status, {
+                    paymentStatus: 'lunas',
+                    amountPaid: trx.grandTotal
+                });
+                closeModal('modal-trx-detail');
+            }
+        }
+
+        // ------------- COMPONENT: NEW TRANSACTION -------------
+        let cartItems = [];
+        window.tempNewTrx = { 
+            customerId: '', 
+            paymentMode: 'belum', 
+            dpAmount: 0, 
+            paymentMethod: 'Tunai',
+            customDate: new Date().toISOString().slice(0, 16)
+        };
+        window.customerSearchQuery = '';
+        window.serviceSearchQuery = '';
+
+        function renderNewTransaction() {
+            cartItems = [];
+            window.tempNewTrx = { 
+                customerId: '', 
+                paymentMode: 'belum', 
+                dpAmount: 0, 
+                paymentMethod: 'Tunai',
+                customDate: new Date().toISOString().slice(0, 16)
+            };
+            window.customerSearchQuery = '';
+            window.serviceSearchQuery = '';
+            updateNewTrxUI();
+        }
+
+        function updateNewTrxUI() {
+            const container = document.getElementById('view-container');
+            const services = window.AppState.services;
+            const customers = window.AppState.customers;
+
+            const qCust = (window.customerSearchQuery || '').toLowerCase();
+            const filteredCustomers = customers.filter(c => 
+                c.name.toLowerCase().includes(qCust) || (c.phone && c.phone.includes(qCust))
+            ).sort((a,b) => a.name.localeCompare(b.name));
+
+            const qSrv = (window.serviceSearchQuery || '').toLowerCase();
+            const filteredServices = services.filter(s => 
+                s.name.toLowerCase().includes(qSrv) || (s.category && s.category.toLowerCase().includes(qSrv))
+            ).sort((a,b) => a.name.localeCompare(b.name));
+
+            const selectedCust = customers.find(c => c.id === tempNewTrx.customerId);
+
+            let customerSelectionHTML = '';
+            if (selectedCust) {
+                customerSelectionHTML = `
+                    <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-300 rounded-xl">
+                        <div>
+                            <p class="font-extrabold text-blue-900">${selectedCust.name}</p>
+                            <p class="text-xs text-blue-600 font-mono">${selectedCust.phone}</p>
+                        </div>
+                        <button onclick="selectCustomer('')" class="text-xs font-bold px-3 py-1 bg-white border border-blue-300 text-blue-700 rounded-lg shadow-sm hover:bg-slate-50 transition">Ganti Pelanggan</button>
+                    </div>
+                `;
+            } else {
+                let custItemsHTML = '';
+                if (filteredCustomers.length === 0) {
+                    custItemsHTML = `<div class="p-3 text-center text-xs text-slate-400">Tidak ada pelanggan ditemukan</div>`;
+                } else {
+                    filteredCustomers.forEach(c => {
+                        custItemsHTML += `
+                            <div onclick="selectCustomer('${c.id}')" class="p-2.5 hover:bg-blue-50 rounded-lg cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">${c.name}</p>
+                                    <p class="text-xs text-slate-500 font-mono">${c.phone}</p>
+                                </div>
+                                <span class="text-xs text-blue-600 font-bold px-2 py-1 bg-blue-100 rounded">Pilih</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                customerSelectionHTML = `
+                    <div class="space-y-2">
+                        <div class="flex gap-2">
+                            <input type="text" id="cust-search" placeholder="🔍 Ketik nama / no HP pelanggan..." value="${window.customerSearchQuery}" class="input-3d flex-1 text-sm py-2" oninput="filterCustomers(this.value)">
+                            <button onclick="navigate('customers')" class="btn-3d btn-3d-outline px-3 py-1 text-xs flex items-center justify-center font-bold" title="Tambah Pelanggan">➕ Baru</button>
+                        </div>
+                        <div class="max-h-48 overflow-y-auto bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-inner">
+                            ${custItemsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let srvItemsHTML = '';
+            if (filteredServices.length === 0) {
+                srvItemsHTML = `<div class="p-3 text-center text-xs text-slate-400">Tidak ada layanan ditemukan</div>`;
+            } else {
+                filteredServices.forEach(s => {
+                    srvItemsHTML += `
+                        <div onclick="addToCart('${s.id}')" class="p-2.5 hover:bg-blue-50 rounded-lg cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition">
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${s.name} <span class="text-xs text-slate-400 font-normal">(${s.category})</span></p>
+                                <p class="text-xs text-blue-600 font-extrabold">${formatRupiah(s.price)} / ${s.unit}</p>
+                            </div>
+                            <span class="text-xs text-white font-bold px-2.5 py-1 bg-blue-500 rounded-lg shadow-sm hover:bg-blue-600 transition">+ Tambah</span>
+                        </div>
+                    `;
+                });
+            }
+
+            let serviceSelectionHTML = `
+                <div class="space-y-2 mb-4">
+                    <input type="text" id="srv-search" placeholder="🔍 Cari nama layanan..." value="${window.serviceSearchQuery}" class="input-3d w-full text-sm py-2" oninput="filterServices(this.value)">
+                    <div class="max-h-44 overflow-y-auto bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-inner">
+                        ${srvItemsHTML}
+                    </div>
+                </div>
+            `;
+
+            let cartHTML = '';
+            let total = 0;
+            if(cartItems.length === 0) {
+                cartHTML = `<div class="p-6 text-center text-slate-400 font-semibold bg-slate-50 rounded-xl border border-dashed border-slate-300 text-sm">Belum ada layanan dipilih dari daftar di atas</div>`;
+            } else {
+                cartItems.forEach((item, index) => {
+                    const s = services.find(x => x.id === item.serviceId);
+                    const sub = item.qty * s.price;
+                    total += sub;
+                    cartHTML += `
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-3 mb-2 bg-white rounded-xl border border-slate-200 shadow-sm gap-2 transition hover:shadow-md">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-800 text-sm">${s.name}</h4>
+                                <p class="text-xs text-slate-500">${formatRupiah(s.price)} / ${s.unit}</p>
+                            </div>
+                            <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="updateCartQty(${index}, -1)" class="w-7 h-7 rounded bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition">-</button>
+                                    <input type="number" value="${item.qty}" min="0.1" step="0.1" class="w-14 text-center input-3d py-1 px-1 text-xs font-bold" onchange="setCartQty(${index}, this.value)">
+                                    <span class="text-xs font-bold text-slate-500 w-8">${s.unit}</span>
+                                    <button onclick="updateCartQty(${index}, 1)" class="w-7 h-7 rounded bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition">+</button>
+                                </div>
+                                <div class="font-extrabold text-blue-600 w-24 text-right text-sm">${formatRupiah(sub)}</div>
+                                <button onclick="removeCartItem(${index})" class="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg p-1 font-bold transition">✕</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = `
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-6">Transaksi Baru</h1>
+                
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="flex-1 space-y-6">
+                        <!-- Kolom Tanggal Masuk Transaksi -->
+                        <div class="card-3d p-6">
+                            <h3 class="font-extrabold text-lg text-slate-700 mb-3 flex items-center gap-2">📅 Tanggal & Waktu Masuk</h3>
+                            <input type="datetime-local" id="custom-trx-date" value="${window.tempNewTrx.customDate}" class="input-3d w-full font-bold text-slate-700 text-sm" onchange="window.tempNewTrx.customDate = this.value">
+                            <p class="text-[11px] text-slate-400 mt-1">Bisa diubah jika mencatat laundry kemarin.</p>
+                        </div>
+
+                        <div class="card-3d p-6">
+                            <h3 class="font-extrabold text-lg text-slate-700 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span> Pilih Pelanggan</h3>
+                            ${customerSelectionHTML}
+                        </div>
+
+                        <div class="card-3d p-6">
+                            <h3 class="font-extrabold text-lg text-slate-700 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span> Pilih Layanan</h3>
+                            ${serviceSelectionHTML}
+                            
+                            <div class="mt-4">
+                                <p class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Layanan Terpilih:</p>
+                                ${cartHTML}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full lg:w-96">
+                        <div class="card-3d p-6 sticky top-8 border-t-4 border-blue-500">
+                            <h3 class="font-extrabold text-lg text-slate-700 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span> Pembayaran</h3>
+                            
+                            <div class="flex justify-between items-center mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <span class="font-bold text-slate-500">Total Tagihan</span>
+                                <span class="text-2xl font-extrabold text-blue-600">${formatRupiah(total)}</span>
+                            </div>
+
+                            <div class="space-y-3 mb-4">
+                                <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${tempNewTrx.paymentMode === 'lunas' ? 'bg-emerald-50 border-emerald-500' : 'border-slate-200 hover:bg-slate-50'}">
+                                    <input type="radio" name="pay_mode" value="lunas" class="w-5 h-5 accent-emerald-500" ${tempNewTrx.paymentMode === 'lunas' ? 'checked' : ''} onchange="setPaymentMode('lunas')">
+                                    <span class="font-bold text-slate-700">Bayar Lunas Sekarang</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${tempNewTrx.paymentMode === 'dp' ? 'bg-yellow-50 border-yellow-500' : 'border-slate-200 hover:bg-slate-50'}">
+                                    <input type="radio" name="pay_mode" value="dp" class="w-5 h-5 accent-yellow-500" ${tempNewTrx.paymentMode === 'dp' ? 'checked' : ''} onchange="setPaymentMode('dp')">
+                                    <span class="font-bold text-slate-700">Bayar DP (Sebagian)</span>
+                                </label>
+                                ${tempNewTrx.paymentMode === 'dp' ? `
+                                    <div class="pl-8 pr-3 pb-3">
+                                        <input type="number" id="dp-amount" placeholder="Nominal DP Rp..." class="input-3d w-full text-sm font-bold" value="${tempNewTrx.dpAmount || ''}" oninput="window.tempNewTrx.dpAmount = this.value">
+                                    </div>
+                                ` : ''}
+                                <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${tempNewTrx.paymentMode === 'belum' ? 'bg-red-50 border-red-500' : 'border-slate-200 hover:bg-slate-50'}">
+                                    <input type="radio" name="pay_mode" value="belum" class="w-5 h-5 accent-red-500" ${tempNewTrx.paymentMode === 'belum' ? 'checked' : ''} onchange="setPaymentMode('belum')">
+                                    <span class="font-bold text-slate-700">Belum Bayar (Nanti)</span>
+                                </label>
+                            </div>
+
+                            ${tempNewTrx.paymentMode !== 'belum' ? `
+                                <div class="mb-6">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Metode Pembayaran</label>
+                                    <select id="pay-method-select" class="input-3d w-full text-sm font-bold text-slate-700" onchange="window.tempNewTrx.paymentMethod = this.value">
+                                        <option value="Tunai">Tunai</option>
+                                        <option value="Transfer">Transfer</option>
+                                        <option value="ShopeePay">ShopeePay</option>
+                                        <option value="DANA">DANA</option>
+                                        <option value="GoPay">GoPay</option>
+                                    </select>
+                                </div>
+                            ` : ''}
+
+                            <button onclick="processTransaction(${total})" class="btn-3d btn-3d-primary w-full py-4 text-lg mt-2 shadow-[0_10px_20px_rgba(59,130,246,0.3)] flex items-center justify-center gap-2">
+                                💾 Simpan Transaksi & Cetak
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.filterCustomers = function(query) { window.customerSearchQuery = query; updateNewTrxUI(); const input = document.getElementById('cust-search'); if(input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } };
+        window.selectCustomer = function(id) { window.tempNewTrx.customerId = id; updateNewTrxUI(); };
+        window.filterServices = function(query) { window.serviceSearchQuery = query; updateNewTrxUI(); const input = document.getElementById('srv-search'); if(input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } };
+        window.addToCart = function(serviceId) { if(!serviceId) return; const existing = cartItems.find(i => i.serviceId === serviceId); if(existing) existing.qty += 1; else cartItems.push({ serviceId, qty: 1 }); updateNewTrxUI(); }
+        window.updateCartQty = function(index, delta) { cartItems[index].qty += delta; if(cartItems[index].qty <= 0) cartItems.splice(index, 1); updateNewTrxUI(); }
+        window.setCartQty = function(index, val) { const v = parseFloat(val); if(v > 0) cartItems[index].qty = v; else cartItems.splice(index, 1); updateNewTrxUI(); }
+        window.removeCartItem = function(index) { cartItems.splice(index, 1); updateNewTrxUI(); }
+        window.setPaymentMode = function(mode) { window.tempNewTrx.paymentMode = mode; updateNewTrxUI(); }
+
+        window.processTransaction = async function(totalAmount) {
+            if(!window.tempNewTrx.customerId) return showToast("Pilih pelanggan terlebih dahulu", "error");
+            if(cartItems.length === 0) return showToast("Keranjang layanan masih kosong", "error");
+            
+            let amountPaid = 0;
+            if(window.tempNewTrx.paymentMode === 'lunas') amountPaid = totalAmount;
+            if(window.tempNewTrx.paymentMode === 'dp') {
+                amountPaid = Number(window.tempNewTrx.dpAmount);
+                if(amountPaid <= 0 || amountPaid >= totalAmount) return showToast("Nominal DP tidak valid", "error");
+            }
+
+            const finalItems = cartItems.map(item => {
+                const s = window.AppState.services.find(x => x.id === item.serviceId);
+                return { serviceId: item.serviceId, qty: item.qty, price: s.price, total: item.qty * s.price };
+            });
+
+            const cashierName = window.AppState.employees.length > 0 ? window.AppState.employees[0].name : 'Admin';
+            const transactionDate = window.tempNewTrx.customDate ? new Date(window.tempNewTrx.customDate).toISOString() : new Date().toISOString();
+
+            const data = {
+                date: transactionDate,
+                customerId: window.tempNewTrx.customerId,
+                items: finalItems,
+                grandTotal: totalAmount,
+                paymentStatus: window.tempNewTrx.paymentMode,
+                paymentMethod: window.tempNewTrx.paymentMode !== 'belum' ? (window.tempNewTrx.paymentMethod || 'Tunai') : '-',
+                amountPaid: amountPaid,
+                status: 'antrian',
+                cashier: cashierName,
+                parfum: 'Standard',
+                note: ''
+            };
+
+            const newId = await window.DB.saveTransaction(data);
+            
+            const actions = `
+                <button onclick="closeModal('modal-success-trx'); navigate('transactions')" class="btn-3d btn-3d-outline px-4 py-2 font-bold text-sm">Lihat Transaksi</button>
+                <button onclick="shareReceipt('${newId}'); closeModal('modal-success-trx')" class="btn-3d btn-3d-success px-4 py-2 flex items-center justify-center gap-2 font-bold text-sm">📤 Bagikan Nota</button>
+                <button onclick="previewReceipt('${newId}'); closeModal('modal-success-trx')" class="btn-3d btn-3d-primary px-6 py-2 flex items-center justify-center gap-2 font-bold text-sm">🖨️ Cetak Nota</button>
+            `;
+            const modalHTML = Modal('modal-success-trx', 'Transaksi Berhasil!', `
+                <div class="text-center py-6">
+                    <div class="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-4 shadow-inner">✅</div>
+                    <p class="text-slate-600 mb-2 font-semibold">Nota transaksi telah berhasil dibuat.</p>
+                    <h2 class="text-3xl font-extrabold text-slate-800">${formatRupiah(totalAmount)}</h2>
+                </div>
+            `, actions);
+            
+            let container = document.getElementById('modal-temp-container');
+            if(!container) { container = document.createElement('div'); container.id = 'modal-temp-container'; document.body.appendChild(container); }
+            container.innerHTML = modalHTML;
+            openModal('modal-success-trx');
+            
+            renderNewTransaction();
+        }
+
+        // ------------- COMPONENT: PRINTING & SHARING -------------
+        function generateEscPosBytes(trxId = null) {
+            let s = window.AppState.settings;
+            let trx = trxId ? window.AppState.transactions.find(t => t.id === trxId) : {
+                id: 'TEST01', date: new Date().toISOString(), cashier: 'Admin', paymentStatus: 'lunas', grandTotal: 34000, amountPaid: 35000, parfum: 'Standard', items: [{serviceId: 'dummy1', qty: 2, price: 6000, total: 12000}]
+            };
+            let cust = trxId ? window.AppState.customers.find(c => c.id === trx?.customerId) : {name: 'Pelanggan Demo'};
+
+            const encoder = new TextEncoder();
+            let buffer = [];
+
+            const addText = (text) => buffer.push(...encoder.encode(text));
+            const INIT = [0x1B, 0x40];
+            const ALIGN_CENTER = [0x1B, 0x61, 0x01];
+            const ALIGN_LEFT = [0x1B, 0x61, 0x00];
+            const BOLD_ON = [0x1B, 0x45, 0x01];
+            const BOLD_OFF = [0x1B, 0x45, 0x00];
+            const LF = [0x0A];
+
+            const line = "--------------------------------\n";
+            const doubleLine = "================================\n";
+
+            buffer.push(...INIT);
+            buffer.push(...ALIGN_CENTER);
+            buffer.push(...BOLD_ON);
+            if(s.showLogo !== false) addText((s.outletName || "LAUNDRY").toUpperCase() + "\n");
+            buffer.push(...BOLD_OFF);
+            if(s.showAddress !== false && s.address) addText(s.address + "\n");
+            if(s.showPhone !== false && s.phone) addText("Telp: " + s.phone + "\n");
+            addText(line);
+
+            buffer.push(...ALIGN_LEFT);
+            const fmtDate = (dateStr) => {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'2-digit'}) + ' ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':');
+            };
+
+            addText(`Nota: #${trx.id.substring(0,8).toUpperCase()}\n`);
+            addText(`Tgl : ${fmtDate(trx.date)}\n`);
+            if (s.showCustomerName !== false) addText(`Plg : ${(cust?.name || 'Umum').substring(0,25)}\n`);
+            if (s.showCashierName !== false) addText(`Ksr : ${(trx.cashier || 'Admin').substring(0,25)}\n`);
+            if (s.showParfum !== false) addText(`Prf : ${(trx.parfum || 'Standard').substring(0,25)}\n`);
+            addText(line);
+
+            trx.items.forEach(i => {
+                let name = 'Item';
+                if (trxId) {
+                    const srv = window.AppState.services.find(ser => ser.id === i.serviceId);
+                    if (srv) name = srv.name;
+                } else {
+                    name = i.serviceId === 'dummy1' ? 'Cuci Komplit (Kg)' : 'Bed Cover Besar (Pcs)';
+                }
+                addText(`${name.substring(0,32)}\n`);
+                let leftStr = ` ${i.qty} x ${i.price.toLocaleString('id-ID')}`;
+                let rightStr = i.total.toLocaleString('id-ID');
+                let spaceCount = 32 - leftStr.length - rightStr.length;
+                if(spaceCount < 1) spaceCount = 1;
+                addText(leftStr + " ".repeat(spaceCount) + rightStr + "\n");
+            });
+
+            addText(line);
+            
+            let gTotalStr = trx.grandTotal.toLocaleString('id-ID');
+            addText("TOTAL" + " ".repeat(32 - 5 - gTotalStr.length) + gTotalStr + "\n");
+
+            if (trx.paymentStatus !== 'belum') {
+                let paidStr = trx.amountPaid.toLocaleString('id-ID');
+                addText("BAYAR" + " ".repeat(32 - 5 - paidStr.length) + paidStr + "\n");
+            }
+
+            if (trx.paymentStatus === 'dp') {
+                let sisaStr = (trx.grandTotal - trx.amountPaid).toLocaleString('id-ID');
+                addText("SISA " + " ".repeat(32 - 5 - sisaStr.length) + sisaStr + "\n");
+            } else if (trx.paymentStatus === 'lunas' && trx.amountPaid > trx.grandTotal) {
+                let kemStr = (trx.amountPaid - trx.grandTotal).toLocaleString('id-ID');
+                addText("KEMBALI" + " ".repeat(32 - 7 - kemStr.length) + kemStr + "\n");
+            }
+
+            let statStr = trx.paymentStatus.toUpperCase();
+            addText("STATUS" + " ".repeat(32 - 6 - statStr.length) + statStr + "\n");
+            addText(doubleLine);
+
+            if (s.receiptFooter) {
+                buffer.push(...ALIGN_CENTER);
+                addText(s.receiptFooter + "\n");
+            }
+            
+            buffer.push(...ALIGN_CENTER);
+            addText("- - - - - - - - - - - - -\n");
+            
+            buffer.push(...LF, ...LF, ...LF, ...LF); 
+            
+            return new Uint8Array(buffer);
+        }
+
+        window.generateReceiptContent = function(trxId = null) {
+            let s = window.AppState.settings;
+            let trx, cust;
+            let items = [];
+            
+            if (trxId) {
+                trx = window.AppState.transactions.find(t => t.id === trxId);
+                cust = window.AppState.customers.find(c => c.id === trx?.customerId);
+                items = trx.items;
+            } else {
+                trx = { id: 'TEST01', date: new Date().toISOString(), cashier: 'Admin', paymentStatus: 'lunas', grandTotal: 34000, amountPaid: 35000 };
+                cust = { name: 'Pelanggan Demo' };
+                items = [{ serviceId: 'dummy1', qty: 2, price: 6000, total: 12000 }, { serviceId: 'dummy2', qty: 1, price: 22000, total: 22000 }];
+            }
+            
+            let itemsHTML = '';
+            items.forEach(i => {
+                let name = 'Item';
+                if (trxId) { const srv = window.AppState.services.find(ser => ser.id === i.serviceId); if (srv) name = srv.name; } 
+                else name = i.serviceId === 'dummy1' ? 'Cuci Komplit (Kg)' : 'Bed Cover Besar (Pcs)';
+                
+                itemsHTML += `
+                    <div style="margin-bottom: 6px;">
+                        <div style="text-align: left; margin-bottom: 2px;">${name}</div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                            <span style="margin-left: 8px;">${i.qty} x ${i.price.toLocaleString('id-ID')}</span>
+                            <span>${i.total.toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const fmtTgl = (dateStr) => {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':');
+            };
+
+            let printContent = `<div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; color: black !important; line-height: 1.3; text-align: left; background: white;">`;
+            
+            if (s.showLogo !== false) {
+                printContent += `<div style="text-align: center; margin-bottom: 10px;">
+                    <div style="font-size: 16px; font-weight: bold;">${s.outletName.toUpperCase()}</div>
+                    ${s.showAddress !== false ? `<div style="margin-top: 2px; font-size: 11px;">${s.address}</div>` : ''}
+                    ${s.showPhone !== false ? `<div style="margin-top: 2px; font-size: 11px;">Telp: ${s.phone}</div>` : ''}
+                </div>`;
+            }
+
+            printContent += `<div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>`;
+            printContent += `<div style="margin: 6px 0; font-size: 11px;">`;
+            printContent += `<div style="display: flex; justify-content: space-between;"><span>Nota:</span><span>#${trx.id.substring(0,8).toUpperCase()}</span></div>`;
+            printContent += `<div style="display: flex; justify-content: space-between;"><span>Tgl :</span><span>${fmtTgl(trx.date)}</span></div>`;
+            if (s.showCustomerName !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Plg :</span><span>${(cust?.name || 'Umum').substring(0,14)}</span></div>`;
+            if (s.showCashierName !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Ksr :</span><span>${trx.cashier || 'Admin'}</span></div>`;
+            if (s.showParfum !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Prf :</span><span>${trx.parfum || 'Standard'}</span></div>`;
+            printContent += `</div><div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>`;
+            printContent += `<div style="margin: 6px 0;">${itemsHTML}</div>`;
+            printContent += `<div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>`;
+            printContent += `<div style="margin: 6px 0; font-weight: bold;">`;
+            printContent += `<div style="display: flex; justify-content: space-between;"><span>TOTAL</span><span>${trx.grandTotal.toLocaleString('id-ID')}</span></div>`;
+            if (trx.paymentStatus !== 'belum') printContent += `<div style="display: flex; justify-content: space-between; font-weight: normal; margin-top: 2px;"><span>BAYAR</span><span>${trx.amountPaid.toLocaleString('id-ID')}</span></div>`;
+            
+            if (trx.paymentStatus === 'dp') {
+                printContent += `<div style="display: flex; justify-content: space-between; font-weight: normal; margin-top: 2px;"><span>SISA</span><span>${(trx.grandTotal - trx.amountPaid).toLocaleString('id-ID')}</span></div>`;
+            } else if (trx.paymentStatus === 'lunas' && trx.amountPaid > trx.grandTotal) {
+                printContent += `<div style="display: flex; justify-content: space-between; font-weight: normal; margin-top: 2px;"><span>KEMBALI</span><span>${(trx.amountPaid - trx.grandTotal).toLocaleString('id-ID')}</span></div>`;
+            }
+            printContent += `<div style="display: flex; justify-content: space-between; font-weight: normal; margin-top: 2px;"><span>STATUS</span><span style="text-transform:uppercase;">${trx.paymentStatus}</span></div>`;
+            printContent += `</div><div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>`;
+            if (s.receiptFooter) printContent += `<div style="text-align: center; margin-top: 8px; font-size: 11px; white-space: pre-wrap;">${s.receiptFooter}</div>`;
+            printContent += `<div style="text-align: center; margin-top: 10px;">- - - - - - - - -</div></div>`;
+            
+            return printContent;
+        };
+
+        window.previewReceipt = function(id = null) {
+            const htmlContent = window.generateReceiptContent(id);
+            const receiptContainer = `
+                <div class="flex justify-center bg-slate-800 p-6 rounded-xl mb-4 overflow-y-auto w-full shadow-inner" style="max-height: 55vh;">
+                    <div id="receipt-paper" style="width: 58mm; min-width: 58mm; background: white; padding: 12px; margin: 0 auto; color: black !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        ${htmlContent}
+                    </div>
+                </div>
+                <p class="text-center text-xs text-slate-500">Pratinjau dengan lebar 58mm</p>
+            `;
+            
+            let actions = `
+                <button onclick="closeModal('modal-receipt-preview')" class="btn-3d btn-3d-outline px-4 py-2 font-bold text-sm">Batal</button>
+                <button onclick="executePrint()" class="btn-3d btn-3d-primary px-6 py-2 flex items-center justify-center gap-2 font-bold text-sm">🖨️ Connect & Print BT</button>
+            `;
+            
+            const modalHTML = Modal('modal-receipt-preview', 'Pratinjau Nota (58mm)', receiptContainer, actions);
+            let container = document.getElementById('modal-temp-container');
+            if(!container) { container = document.createElement('div'); container.id = 'modal-temp-container'; document.body.appendChild(container); }
+            container.innerHTML = modalHTML;
+            
+            window.currentPrintContent = htmlContent;
+            window.currentPreviewTrxId = id;
+            openModal('modal-receipt-preview');
+        };
+
+        window.executePrint = async function() {
+            const trxId = window.currentPreviewTrxId;
+
+            if (!navigator.bluetooth) {
+                showToast("Browser tidak mendukung Web Bluetooth API. Mencetak lewat PDF...", "warning");
+                if (window.currentPrintContent) {
+                    document.getElementById('print-area').innerHTML = window.currentPrintContent;
+                    closeModal('modal-receipt-preview');
+                    setTimeout(() => { window.print(); }, 500);
+                }
+                return;
+            }
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2'] 
+                });
+
+                showToast("Menghubungkan ke printer...", "success");
+                const server = await device.gatt.connect();
+                const services = await server.getPrimaryServices();
+                let printCharacteristic = null;
+
+                for (let service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    for (let characteristic of characteristics) {
+                        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+                            printCharacteristic = characteristic;
+                            break;
+                        }
+                    }
+                    if (printCharacteristic) break;
+                }
+
+                if (!printCharacteristic) {
+                    throw new Error("Karakteristik cetak tidak ditemukan.");
+                }
+
+                const dataToPrint = generateEscPosBytes(trxId);
+                const chunkSize = 512;
+
+                for (let i = 0; i < dataToPrint.length; i += chunkSize) {
+                    const chunk = dataToPrint.slice(i, i + chunkSize);
+                    await printCharacteristic.writeValue(chunk);
+                }
+
+                showToast("Berhasil mencetak nota ke printer!", "success");
+                closeModal('modal-receipt-preview');
+
+            } catch (error) {
+                console.error(error);
+                if (error.name === 'NotFoundError') {
+                     showToast("Pencarian Bluetooth dibatalkan pengguna.", "error");
+                } else if (error.name === 'SecurityError') {
+                     showToast("Pastikan Anda menggunakan HTTPS.", "error");
+                } else {
+                     showToast("Gagal mencetak: " + error.message, "error");
+                }
+            }
+        };
+
+        window.shareReceipt = async function(id) {
+            const trx = window.AppState.transactions.find(t => t.id === id);
+            const cust = window.AppState.customers.find(c => c.id === trx?.customerId);
+            const settings = window.AppState.settings;
+            if(!trx) return showToast("Data tidak lengkap", "error");
+
+            const l1 = "--------------------------------\n";
+            const l2 = "================================\n";
+
+            let text = `${settings.outletName.toUpperCase()}\n`;
+            if (settings.address) text += `${settings.address}\n`;
+            text += l1;
+            text += `Nota : #${trx.id.substring(0,8).toUpperCase()}\n`;
+            text += `Tgl  : ${formatDate(trx.date)}\n`;
+            if (settings.showCustomerName !== false) text += `Plg  : ${cust ? cust.name : 'Umum'}\n`;
+            if (settings.showCashierName !== false) text += `Ksr  : ${trx.cashier || 'Admin'}\n`;
+            text += l2;
+
+            trx.items.forEach(i => {
+                const s = window.AppState.services.find(ser => ser.id === i.serviceId);
+                text += `${s ? s.name : 'Item'}\n`;
+                text += `  ${i.qty} x ${formatRupiah(i.price)} = ${formatRupiah(i.total)}\n`;
+            });
+            
+            text += l1;
+            text += `TOTAL       : ${formatRupiah(trx.grandTotal)}\n`;
+            
+            if(trx.paymentStatus === 'dp') {
+                text += `T'LAH DIBAYAR: ${formatRupiah(trx.amountPaid)}\n`;
+                text += `SISA TAGIHAN: ${formatRupiah(trx.grandTotal - trx.amountPaid)}\n`;
+            } else if (trx.paymentStatus !== 'belum') {
+                text += `T'LAH DIBAYAR: ${formatRupiah(trx.amountPaid)}\n`;
+            }
+            
+            text += `STATUS      : ${trx.paymentStatus.toUpperCase()}\n`;
+            text += l1;
+            
+            if(settings.receiptFooter) text += `${settings.receiptFooter}\n`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `Nota - ${settings.outletName}`,
+                        text: text
+                    });
+                    showToast("Nota berhasil dibagikan!");
+                } catch (err) {
+                    console.log("Share dibatalkan pengguna atau bermasalah");
+                }
+            } else {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast("Web Share tidak didukung. Teks nota telah disalin ke clipboard!");
+                } catch (err) {
+                    let phone = cust?.phone || '';
+                    if(phone.startsWith('0')) phone = '62' + phone.substring(1);
+                    if(phone) {
+                        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                        showToast("Diteruskan ke WhatsApp karena browser tidak dukung share.");
+                    } else {
+                        showToast("Fitur share tidak didukung browser", "error");
+                    }
+                }
+            }
+        };
+
+        // ------------- COMPONENT: SERVICES -------------
+        function renderServices() {
+            const container = document.getElementById('view-container');
+            const data = window.AppState.services;
+
+            let html = `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-extrabold text-slate-800">Layanan & Harga</h1>
+                    <button onclick="openServiceForm()" class="btn-3d btn-3d-primary px-4 py-2 font-bold text-sm">➕ Tambah</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            `;
+
+            data.forEach(item => {
+                html += `
+                    <div class="card-3d p-4 flex flex-col justify-between hover:shadow-lg transition">
+                        <div>
+                            <div class="flex justify-between items-start mb-2 gap-1">
+                                <h3 class="font-bold text-sm md:text-base text-slate-800 leading-tight">${item.name}</h3>
+                                <span class="bg-blue-100 text-blue-700 text-[9px] uppercase px-1.5 py-0.5 rounded font-bold shrink-0 shadow-sm">${item.category}</span>
+                            </div>
+                            <p class="text-lg font-extrabold text-slate-700 mb-1">${formatRupiah(item.price)} <span class="text-xs text-slate-400 font-normal">/ ${item.unit}</span></p>
+                            <p class="text-[10px] text-slate-500 font-semibold mb-3">⏱️ Estimasi: ${item.estimasi || 1} Hari</p>
+                        </div>
+                        <div class="flex gap-2 border-t border-slate-100 pt-3 mt-1">
+                            <button onclick="openServiceForm('${item.id}')" class="btn-3d btn-3d-outline flex-1 py-1 text-xs font-bold">Edit</button>
+                            <button onclick="deleteService('${item.id}')" class="btn-3d btn-3d-danger flex-1 py-1 text-xs font-bold">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div><div id="modal-service-container"></div>`;
+            container.innerHTML = html;
+        }
+
+        window.openServiceForm = function(id = null) {
+            let item = { name: '', category: 'Kiloan', price: '', unit: 'Kg', estimasi: 1 };
+            if (id) item = window.AppState.services.find(s => s.id === id);
+
+            const formHTML = `
+                <form id="form-service" class="space-y-4">
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Nama Layanan</label>
+                    <input type="text" id="svc_name" value="${item.name}" class="input-3d w-full" required></div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-bold text-slate-600 mb-1">Kategori</label>
+                        <select id="svc_cat" class="input-3d w-full font-bold text-slate-700">
+                            <option value="Kiloan" ${item.category==='Kiloan'?'selected':''}>Kiloan</option>
+                            <option value="Satuan" ${item.category==='Satuan'?'selected':''}>Satuan</option>
+                            <option value="Lainnya" ${item.category==='Lainnya'?'selected':''}>Lainnya</option>
+                        </select></div>
+                        
+                        <div><label class="block text-sm font-bold text-slate-600 mb-1">Satuan</label>
+                        <select id="svc_unit" class="input-3d w-full font-bold text-slate-700">
+                            <option value="Kg" ${item.unit==='Kg'?'selected':''}>Kg</option>
+                            <option value="Pcs" ${item.unit==='Pcs'?'selected':''}>Pcs</option>
+                            <option value="Meter" ${item.unit==='Meter'?'selected':''}>Meter</option>
+                        </select></div>
+                    </div>
+
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Estimasi Selesai (Hari)</label>
+                    <input type="number" id="svc_estimasi" value="${item.estimasi || 1}" min="1" class="input-3d w-full font-bold text-slate-700" required></div>
+
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Harga (Rp)</label>
+                    <input type="number" id="svc_price" value="${item.price}" class="input-3d w-full font-bold text-slate-700" required></div>
+                </form>
+            `;
+            const actions = `<button onclick="saveService('${id||''}')" class="btn-3d btn-3d-primary px-6 py-2 font-bold text-sm w-full sm:w-auto">Simpan Layanan</button>`;
+            
+            document.getElementById('modal-service-container').innerHTML = Modal('modal-service', id ? 'Edit Layanan' : 'Tambah Layanan', formHTML, actions);
+            openModal('modal-service');
+        }
+
+        window.saveService = async function(id) {
+            const data = {
+                name: document.getElementById('svc_name').value,
+                category: document.getElementById('svc_cat').value,
+                unit: document.getElementById('svc_unit').value,
+                price: Number(document.getElementById('svc_price').value),
+                estimasi: Number(document.getElementById('svc_estimasi').value) || 1
+            };
+            if(!data.name || !data.price) return showToast("Lengkapi data yang kosong", "error");
+            
+            if(id) await window.DB.updateService(id, data);
+            else await window.DB.addService(data);
+            
+            closeModal('modal-service');
+            renderServices();
+        }
+
+        window.deleteService = async function(id) {
+            if(confirm("Apakah Anda yakin ingin menghapus layanan ini?")) {
+                await window.DB.deleteService(id);
+                renderServices();
+            }
+        }
+
+        // ------------- COMPONENT: CUSTOMERS -------------
+        function renderCustomers() {
+            const container = document.getElementById('view-container');
+            const data = window.AppState.customers;
+
+            let rows = '';
+            data.forEach(item => {
+                rows += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-4 font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-blue-200 text-white flex items-center justify-center font-bold shadow-sm shrink-0">${item.name.charAt(0).toUpperCase()}</div>
+                            ${item.name}
+                        </td>
+                        <td class="p-4 text-slate-600 font-mono">${item.phone}</td>
+                        <td class="p-4 text-slate-500 text-sm max-w-xs truncate hidden md:table-cell">${item.address || '-'}</td>
+                        <td class="p-4 text-right">
+                            <a href="https://wa.me/${item.phone.startsWith('0')?'62'+item.phone.substring(1):item.phone}" target="_blank" class="btn-3d btn-3d-success px-4 py-1.5 text-xs font-bold shadow-sm">Kirim WA</a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-extrabold text-slate-800">Database Pelanggan</h1>
+                    <div class="flex gap-2">
+                        <button onclick="importContacts()" class="btn-3d btn-3d-success px-4 py-2 font-bold text-sm hidden md:flex items-center gap-1" title="Import dari Kontak HP">📱 Import Kontak</button>
+                        <button onclick="importContacts()" class="btn-3d btn-3d-success px-3 py-2 font-bold text-sm md:hidden" title="Import Kontak">📱</button>
+                        <button onclick="openCustomerForm()" class="btn-3d btn-3d-primary px-4 py-2 font-bold text-sm">➕ Tambah</button>
+                    </div>
+                </div>
+                <div class="card-3d overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr class="bg-slate-100/50 text-slate-500 text-sm uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-4 font-extrabold">Nama Pelanggan</th>
+                                    <th class="p-4 font-extrabold">No. WhatsApp</th>
+                                    <th class="p-4 font-extrabold hidden md:table-cell">Alamat</th>
+                                    <th class="p-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold">Belum ada data pelanggan</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="modal-customer-container"></div>
+            `;
+        }
+
+        window.importContacts = async function() {
+            if (!('contacts' in navigator && 'ContactsManager' in window)) {
+                return showToast("Maaf, browser atau HP Anda tidak mendukung fitur Import Kontak otomatis ini.", "warning");
+            }
+            try {
+                const props = ['name', 'tel'];
+                const opts = { multiple: true };
+                const contacts = await navigator.contacts.select(props, opts);
+                
+                if (contacts.length > 0) {
+                    showLoading(true);
+                    let imported = 0;
+                    for (let c of contacts) {
+                        let name = c.name && c.name.length > 0 ? c.name[0] : 'Tanpa Nama';
+                        let phone = c.tel && c.tel.length > 0 ? c.tel[0].replace(/[^0-9+]/g, '') : '';
+                        
+                        if (phone && !window.AppState.customers.find(x => x.phone === phone)) {
+                            await window.DB.addCustomer({ name, phone, address: '' });
+                            imported++;
+                        }
+                    }
+                    showLoading(false);
+                    showToast(`Berhasil mengimpor ${imported} pelanggan baru.`);
+                    renderCustomers();
+                }
+            } catch (e) {
+                showLoading(false);
+                console.error(e);
+            }
+        };
+
+        window.openCustomerForm = function() {
+            const formHTML = `
+                <form id="form-customer" class="space-y-4">
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Nama Lengkap</label>
+                    <input type="text" id="cust_name" class="input-3d w-full font-bold text-slate-700" required></div>
+                    
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">No. WhatsApp</label>
+                    <input type="tel" id="cust_phone" class="input-3d w-full font-bold text-slate-700" required placeholder="08..."></div>
+
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Alamat Lengkap</label>
+                    <textarea id="cust_address" class="input-3d w-full h-24 resize-none"></textarea></div>
+                </form>
+            `;
+            const actions = `<button onclick="saveCustomer()" class="btn-3d btn-3d-primary px-6 py-2 font-bold w-full sm:w-auto">Simpan Pelanggan</button>`;
+            
+            document.getElementById('modal-customer-container').innerHTML = Modal('modal-customer', 'Tambah Pelanggan Baru', formHTML, actions);
+            openModal('modal-customer');
+        }
+
+        window.saveCustomer = async function() {
+            const data = { name: document.getElementById('cust_name').value, phone: document.getElementById('cust_phone').value, address: document.getElementById('cust_address').value };
+            if(!data.name || !data.phone) return showToast("Nama dan Nomor WhatsApp wajib diisi", "error");
+            await window.DB.addCustomer(data);
+            closeModal('modal-customer');
+            renderCustomers();
+        }
+
+        // ------------- COMPONENT: EMPLOYEES -------------
+        function renderEmployees() {
+            const container = document.getElementById('view-container');
+            const data = window.AppState.employees;
+
+            let rows = '';
+            data.forEach(item => {
+                rows += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-4 font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shadow-sm shrink-0">👷</div>
+                            ${item.name}
+                        </td>
+                        <td class="p-4 text-slate-600 font-bold"><span class="bg-slate-100 px-3 py-1 rounded-lg text-xs uppercase shadow-sm">${item.role || 'Staf'}</span></td>
+                        <td class="p-4 text-slate-500 font-mono text-sm">${item.phone || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-extrabold text-slate-800">Data Karyawan</h1>
+                    <button onclick="openEmployeeForm()" class="btn-3d btn-3d-primary px-4 py-2 font-bold text-sm">➕ Tambah</button>
+                </div>
+                <div class="card-3d overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr class="bg-slate-100/50 text-slate-500 text-sm uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-4 font-extrabold">Nama Karyawan</th>
+                                    <th class="p-4 font-extrabold">Posisi / Jabatan</th>
+                                    <th class="p-4 font-extrabold">Kontak WA</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="3" class="p-8 text-center text-slate-400 font-bold">Belum ada karyawan</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="modal-employee-container"></div>
+            `;
+        }
+        
+        window.openEmployeeForm = function() {
+            const formHTML = `
+                <form id="form-emp" class="space-y-4">
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Nama Karyawan</label>
+                    <input type="text" id="emp_name" class="input-3d w-full font-bold text-slate-700" required></div>
+                    
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">Posisi / Jabatan</label>
+                    <input type="text" id="emp_role" class="input-3d w-full" placeholder="Kasir, Bagian Cuci, dll"></div>
+                    
+                    <div><label class="block text-sm font-bold text-slate-600 mb-1">No. WhatsApp</label>
+                    <input type="text" id="emp_phone" class="input-3d w-full font-bold text-slate-700" placeholder="08..."></div>
+                </form>
+            `;
+            const actions = `<button onclick="saveEmployee()" class="btn-3d btn-3d-primary px-6 py-2 font-bold w-full sm:w-auto">Simpan Karyawan</button>`;
+            
+            document.getElementById('modal-employee-container').innerHTML = Modal('modal-employee', 'Tambah Karyawan Baru', formHTML, actions);
+            openModal('modal-employee');
+        }
+
+        window.saveEmployee = async function() {
+            const data = { name: document.getElementById('emp_name').value, role: document.getElementById('emp_role').value || 'Staf', phone: document.getElementById('emp_phone').value };
+            if(!data.name) return showToast("Nama karyawan wajib diisi", "error");
+            await window.DB.addEmployee(data);
+            closeModal('modal-employee');
+            renderEmployees();
+        }
+
+        // ------------- COMPONENT: SETTINGS -------------
+        function renderSettings() {
+            const container = document.getElementById('view-container');
+            const s = window.AppState.settings;
+
+            container.innerHTML = `
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-6">Pengaturan Sistem & Nota</h1>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-8 space-y-6">
+                        <div class="card-3d p-6">
+                            <h3 class="font-extrabold text-lg text-slate-700 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">🏪 Profil Outlet Laundry</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-1">Nama Outlet / Toko</label>
+                                    <input type="text" id="set_name" value="${s.outletName}" class="input-3d w-full font-bold text-slate-800">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-1">Alamat Lengkap Outlet</label>
+                                    <textarea id="set_address" class="input-3d w-full h-20 resize-none">${s.address}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-1">No. Telp / WhatsApp Outlet</label>
+                                    <input type="text" id="set_phone" value="${s.phone}" class="input-3d w-full font-bold text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-3d p-6">
+                            <h3 class="font-extrabold text-lg text-slate-700 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">🖨️ Kustomisasi Komponen Nota 58mm</h3>
+                            <p class="text-xs text-slate-500 mb-4 font-bold">Centang komponen yang ingin ditampilkan pada struk cetak:</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_logo" class="w-5 h-5 accent-blue-500" ${s.showLogo !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">Nama Toko (Header)</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_address" class="w-5 h-5 accent-blue-500" ${s.showAddress !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">Alamat Outlet</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_phone" class="w-5 h-5 accent-blue-500" ${s.showPhone !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">No. Telp Outlet</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_cust" class="w-5 h-5 accent-blue-500" ${s.showCustomerName !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">Nama Pelanggan</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_cashier" class="w-5 h-5 accent-blue-500" ${s.showCashierName !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">Nama Kasir</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition">
+                                    <input type="checkbox" id="chk_parfum" class="w-5 h-5 accent-blue-500" ${s.showParfum !== false ? 'checked' : ''}>
+                                    <span class="font-bold text-sm text-slate-700">Info Parfum</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-1">Pesan Penutup / Syarat Ketentuan (Footer)</label>
+                                <textarea id="set_footer" class="input-3d w-full h-24 resize-none text-sm p-3 leading-relaxed">${s.receiptFooter}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end pt-2 pb-6">
+                            <button onclick="saveSettingsForm()" class="btn-3d btn-3d-primary px-8 py-3 w-full sm:w-auto text-lg font-bold shadow-[0_10px_20px_rgba(59,130,246,0.3)]">💾 Simpan Semua Pengaturan</button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="card-3d p-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0 sticky top-8 shadow-2xl">
+                            <h3 class="font-extrabold text-xl mb-3 flex items-center gap-2 text-blue-300">🖨️ Printer Bluetooth (Thermal)</h3>
+                            <p class="text-slate-300 text-sm mb-4 leading-relaxed font-semibold">Telah menggunakan Web Bluetooth API untuk otomatis mencari dan memprint struk secara *direct* melalui printer thermal Anda.</p>
+                            
+                            <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 shadow-inner">
+                                <p class="text-xs text-slate-400 mb-3 text-center">Lihat pratinjau nota berdasarkan isian form saat ini sebelum Anda menyimpannya.</p>
+                                <button onclick="testPrint()" class="btn-3d bg-blue-500 text-white hover:bg-blue-400 px-4 py-3 w-full font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30">
+                                    👁️ Buka Pratinjau Nota
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.saveSettingsForm = async function() {
+            const data = {
+                outletName: document.getElementById('set_name').value,
+                address: document.getElementById('set_address').value,
+                phone: document.getElementById('set_phone').value,
+                receiptFooter: document.getElementById('set_footer').value,
+                showLogo: document.getElementById('chk_logo').checked,
+                showAddress: document.getElementById('chk_address').checked,
+                showPhone: document.getElementById('chk_phone').checked,
+                showCustomerName: document.getElementById('chk_cust').checked,
+                showCashierName: document.getElementById('chk_cashier').checked,
+                showParfum: document.getElementById('chk_parfum').checked
+            };
+            await window.DB.saveSetting(data);
+        }
+
+        window.testPrint = function() {
+            const tempSettings = {
+                outletName: document.getElementById('set_name').value,
+                address: document.getElementById('set_address').value,
+                phone: document.getElementById('set_phone').value,
+                receiptFooter: document.getElementById('set_footer').value,
+                showLogo: document.getElementById('chk_logo').checked,
+                showAddress: document.getElementById('chk_address').checked,
+                showPhone: document.getElementById('chk_phone').checked,
+                showCustomerName: document.getElementById('chk_cust').checked,
+                showCashierName: document.getElementById('chk_cashier').checked,
+                showParfum: document.getElementById('chk_parfum').checked
+            };
+            const oldSettings = {...window.AppState.settings};
+            window.AppState.settings = {...oldSettings, ...tempSettings};
+            previewReceipt(null);
+            window.AppState.settings = oldSettings;
+        };
+    </script>
+</body>
+</html>
