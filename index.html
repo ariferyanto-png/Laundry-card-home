@@ -612,10 +612,10 @@
             const squareWidget = (title, value, icon, colorClass, onClickAttr = '') => `
                 <div ${onClickAttr} class="card-3d p-3.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all h-28 bg-white">
                     <div class="flex justify-start">
-                        <div class="icon-3d w-20 h-20 text-lg ${colorClass} shadow-inner shrink-0">${icon}</div>
+                        <div class="icon-3d w-10 h-10 text-lg ${colorClass} shadow-inner shrink-0">${icon}</div>
                     </div>
                     <div class="text-left mt-2">
-                        <p class="text-[18px] md:text-xs font-bold text-slate-500 leading-tight mb-0.5">${title}</p>
+                        <p class="text-[14px] md:text-xs font-bold text-slate-500 leading-tight mb-0.5">${title}</p>
                         <h3 class="text-sm md:text-base font-extrabold text-slate-800 truncate">${value}</h3>
                     </div>
                 </div>
@@ -628,7 +628,7 @@
                         ${icon}
                         <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md min-w-[18px] text-center border-2 border-white">${value}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">${title}</span>
+                    <span class="text-[12px] font-bold text-slate-600 text-center leading-tight">${title}</span>
                 </div>
             `;
 
