@@ -2318,7 +2318,6 @@
             printContent += `<div style="margin: 6px 0; font-size: 11px;">`;
             printContent += `<div style="display: flex; justify-content: space-between;"><span>Nota:</span><span>#${trx.id.substring(0,8).toUpperCase()}</span></div>`;
             printContent += `<div style="display: flex; justify-content: space-between;"><span>Tgl :</span><span>${fmtTgl(trx.date)}</span></div>`;
-            printContent += `<div style="display: flex; justify-content: space-between;"><span>Selesai:</span><span>${(() => { let days = 1; if (trx.items && trx.items.length > 0 && window.AppState && window.AppState.services) { let srv = window.AppState.services.find(s => s.id === trx.items[0].serviceId); if (srv && srv.duration) days = parseInt(srv.duration) || 1; } let d = new Date(trx.date); d.setDate(d.getDate() + days); return fmtTgl(d); })()}</span></div>;
             if (s.showCustomerName !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Plg :</span><span>${(cust?.name || 'Umum').substring(0,14)}</span></div>`;
             if (s.showCashierName !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Ksr :</span><span>${trx.cashier || 'Admin'}</span></div>`;
             if (s.showParfum !== false) printContent += `<div style="display: flex; justify-content: space-between;"><span>Prf :</span><span>${trx.parfum || 'Standard'}</span></div>`;
